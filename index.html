@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>ระฆังเตือนสติ</title>
+<meta name="description" content="แอปเสียงระฆังเตือนสติ แจ้งเตือนเป็นระยะเพื่อดึงสติกลับมาที่ปัจจุบัน ใช้ได้ทั้งคอมพิวเตอร์และโทรศัพท์" />
+<meta name="theme-color" content="#5b3cc4" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="ระฆังสติ" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="bell-glyph" aria-hidden="true">🔔</span>
+      <h1>ระฆังเตือนสติ</h1>
+    </div>
+    <button id="installBtn" class="ghost-btn" hidden>ติดตั้งเป็นแอป</button>
+  </header>
+
+  <main>
+    <section class="status-card">
+      <div class="ring-dial" id="ringDial">
+        <svg viewBox="0 0 120 120" class="ring-svg" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" class="ring-track"></circle>
+          <circle cx="60" cy="60" r="52" class="ring-progress" id="ringProgress"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-state" id="ringState">หยุดอยู่</div>
+          <div class="ring-time" id="ringCountdown">--:--</div>
+          <div class="ring-sub" id="ringSub">กดเริ่มเพื่อตั้งเวลาระฆัง</div>
+        </div>
+      </div>
+
+      <div class="primary-actions">
+        <button id="toggleBtn" class="primary-btn">เริ่ม</button>
+        <button id="testBtn" class="secondary-btn">ทดสอบเสียง</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>รูปแบบเวลา</h2>
+      <div class="mode-switch" role="tablist">
+        <button class="mode-tab active" data-mode="interval" role="tab">ทุกช่วงเวลา</button>
+        <button class="mode-tab" data-mode="fixed" role="tab">เวลาเจาะจง</button>
+      </div>
+
+      <div id="intervalMode" class="mode-panel">
+        <label class="field">
+          <span>ตีระฆังทุกๆ</span>
+          <div class="inline-input">
+            <input type="number" id="intervalMinutes" min="1" max="600" value="30" />
+            <span class="unit">นาที</span>
+          </div>
+        </label>
+
+        <label class="field checkbox-field">
+          <input type="checkbox" id="useActiveWindow" checked />
+          <span>ใช้เฉพาะช่วงเวลาที่กำหนด</span>
+        </label>
+
+        <div class="field-row" id="activeWindowRow">
+          <label class="field">
+            <span>เริ่ม</span>
+            <input type="time" id="activeStart" value="08:00" />
+          </label>
+          <label class="field">
+            <span>สิ้นสุด</span>
+            <input type="time" id="activeEnd" value="21:00" />
+          </label>
+        </div>
+      </div>
+
+      <div id="fixedMode" class="mode-panel" hidden>
+        <span class="field-label">เวลาที่จะให้แจ้งเตือน</span>
+        <ul class="time-list" id="fixedTimeList"></ul>
+        <div class="add-time-row">
+          <input type="time" id="newFixedTime" value="09:00" />
+          <button id="addFixedTime" class="ghost-btn">+ เพิ่มเวลา</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>เสียงระฆัง</h2>
+      <div class="sound-grid" id="soundGrid">
+        <button class="sound-choice active" data-sound="tibetan">
+          <span class="sound-name">โบว์ทิเบต</span>
+          <span class="sound-desc">เสียงกังวานยาว นุ่มลึก</span>
+        </button>
+        <button class="sound-choice" data-sound="temple">
+          <span class="sound-name">ระฆังวัด</span>
+          <span class="sound-desc">เสียงหนักแน่น สงบ</span>
+        </button>
+        <button class="sound-choice" data-sound="chime">
+          <span class="sound-name">กระดิ่งใส</span>
+          <span class="sound-desc">เสียงสั้น กังวานใส</span>
+        </button>
+      </div>
+      <label class="field">
+        <span>ระดับเสียง</span>
+        <input type="range" id="volume" min="0" max="100" value="80" />
+      </label>
+    </section>
+
+    <section class="panel">
+      <h2>ข้อความเตือนสติ</h2>
+      <textarea id="message" maxlength="120" rows="2">หยุดสักครู่... หายใจเข้าลึกๆ แล้วรู้สึกตัว</textarea>
+      <div class="field-row">
+        <label class="field checkbox-field">
+          <input type="checkbox" id="notifyEnabled" checked />
+          <span>แจ้งเตือนแบบข้อความ (Notification)</span>
+        </label>
+        <label class="field checkbox-field">
+          <input type="checkbox" id="wakeLock" />
+          <span>กันหน้าจอดับระหว่างทำงาน</span>
+        </label>
+      </div>
+      <p class="hint" id="permissionHint"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header-row">
+        <h2>ประวัติการแจ้งเตือน</h2>
+        <button id="clearLog" class="link-btn">ล้างประวัติ</button>
+      </div>
+      <ul class="log-list" id="logList">
+        <li class="log-empty">ยังไม่มีประวัติ</li>
+      </ul>
+    </section>
+
+    <section class="panel note-panel">
+      <h2>เกี่ยวกับการใช้งานหลายอุปกรณ์</h2>
+      <p>
+        แอปนี้ทำงานแบบอิสระในแต่ละเครื่อง — ตั้งเวลาและกดเริ่มในแต่ละอุปกรณ์ที่ต้องการให้แจ้งเตือน
+        (เช่น คอมพิวเตอร์ 1 ครั้ง และมือถือ 1 ครั้ง) ตั้งค่าจะถูกจำไว้ในเครื่องนั้นๆ และใช้งานได้แม้ไม่มีอินเทอร์เน็ต
+        หลังติดตั้งครั้งแรก ควรเปิดแท็บ/แอปนี้ค้างไว้เพื่อให้ได้ยินเสียงระฆังตรงเวลา
+      </p>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>ทำงานแบบออฟไลน์ได้ · ตั้งค่าเก็บไว้ในเครื่องนี้เท่านั้น</span>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
