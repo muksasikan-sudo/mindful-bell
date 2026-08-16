@@ -78,11 +78,11 @@ body {
 .bg-quote {
   position: relative;
   z-index: 1;
-  margin: 0 auto 10px;
-  max-width: 480px;
-  padding: 0 24px;
-  font-size: 12px;
-  line-height: 1.85;
+  margin: 0 auto 14px;
+  max-width: 560px;
+  padding: 0 20px;
+  font-size: 24px;
+  line-height: 1.7;
   font-style: italic;
   letter-spacing: 0.2px;
   white-space: pre-line;
@@ -93,20 +93,23 @@ body {
   user-select: none;
 }
 
-.bg-quote-left { margin-top: 18px; }
-.bg-quote-right { margin-bottom: 18px; }
+.bg-quote-left { margin-top: 20px; }
+.bg-quote-right { margin-bottom: 20px; }
 
 /* Wide viewports: the app column has real margins on both sides, so pin
-   the quotes there instead — fixed, always visible, never scrolls away. */
-@media (min-width: 980px) {
+   the quotes there instead — fixed, always visible, never scrolls away.
+   Breakpoint is pushed out further than the layout strictly needs so the
+   larger text always has enough margin to sit in without overlapping the
+   app column. */
+@media (min-width: 1300px) {
   .bg-quote {
     position: fixed;
-    top: 80px;
+    top: 70px;
     z-index: 0;
     margin: 0;
-    max-width: 260px;
+    max-width: 300px;
     padding: 0;
-    font-size: 13px;
+    font-size: 26px;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 0, 0, 0.4);
   }
   .bg-quote-left { left: 24px; text-align: left; }
