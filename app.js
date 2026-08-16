@@ -43,7 +43,16 @@
     fixedTimes: ["09:00", "12:00", "15:00", "18:00"],
     sound: "tibetan",
     volume: 0.8,
-    message: "หยุดสักครู่... หายใจเข้าลึกๆ แล้วรู้สึกตัว",
+    messages: [
+      "หยุดสักครู่... หายใจเข้าลึกๆ แล้วรู้สึกตัว",
+      "มีสติรู้อยู่กับท่าทางปัจจุบัน นั่ง หรือยืน หรือเดิน หรือนอนอยู่",
+      "ยิ้ม แล้วรู้สึกตัวว่ายิ้ม",
+      "หายใจเข้าลึกๆ หายใจออกยาวๆ แล้วรู้ว่ากำลังหายใจอยู่",
+      "ช้าลงหน่อย มีสติรู้อารมณ์ขณะนี้ เราอารมณ์เป็นอย่างไร ยินดีหรือยินร้าย",
+      "ทุกข์หรือสุขย่อมผ่านไปเสมอ เพราะทุกอย่างนั้นมีเกิดขึ้น ตั้งอยู่ ดับไป",
+      "มีสติในทุกย่างก้าว",
+      "คิดก่อนพูด เพื่อตนเองและผู้อื่น",
+    ],
     notifyEnabled: true,
     wakeLock: false,
     runtime: { running: false, anchorTime: null },
@@ -51,6 +60,7 @@
 
   let settings = loadSettings();
   let log = loadLog();
+  let currentMessageIndex = -1;
 
   let running = false;
   let audioCtx = null;
@@ -83,7 +93,10 @@
   const addFixedTimeBtn = el("addFixedTime");
   const soundGrid = el("soundGrid");
   const volumeInput = el("volume");
-  const messageInput = el("message");
+  const msgList = el("msgList");
+  const newMsgTextInput = el("newMsgText");
+  const addMsgBtn = el("addMsgBtn");
+  const ringMessageEl = el("ringMessage");
   const notifyEnabledInput = el("notifyEnabled");
   const wakeLockInput = el("wakeLock");
   const permissionHint = el("permissionHint");
@@ -101,9 +114,16 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return structuredCloneSafe(defaults);
       const saved = JSON.parse(raw);
-      return Object.assign(structuredCloneSafe(defaults), saved, {
+      const merged = Object.assign(structuredCloneSafe(defaults), saved, {
         runtime: Object.assign({}, defaults.runtime, saved.runtime || {}),
       });
+      if (!Array.isArray(saved.messages) || !saved.messages.length) {
+        merged.messages = typeof saved.message === "string" && saved.message.trim()
+          ? [saved.message.trim()]
+          : structuredCloneSafe(defaults.messages);
+      }
+      delete merged.message;
+      return merged;
     } catch (e) {
       return structuredCloneSafe(defaults);
     }
@@ -198,13 +218,13 @@
   }
 
   // ---- notifications ----
-  async function sendNotification() {
+  async function sendNotification(body) {
     if (!settings.notifyEnabled) return;
     if (!("Notification" in window)) return;
     if (Notification.permission !== "granted") return;
     const title = "ระฆังเตือนสติ";
     const options = {
-      body: settings.message || "หยุดสักครู่ หายใจเข้าลึกๆ",
+      body: body || "หยุดสักครู่ หายใจเข้าลึกๆ",
       icon: "icons/icon-192.png",
       badge: "icons/icon-192.png",
       tag: "mindful-bell",
@@ -341,11 +361,35 @@
     scheduleNext();
   }
 
+  function pickNextMessageIndex() {
+    if (!settings.messages.length) return -1;
+    if (settings.messages.length === 1) return 0;
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * settings.messages.length);
+    } while (idx === currentMessageIndex);
+    return idx;
+  }
+
+  function pickNextMessage() {
+    const idx = pickNextMessageIndex();
+    if (idx === -1) return "หยุดสักครู่... หายใจเข้าลึกๆ แล้วรู้สึกตัว";
+    currentMessageIndex = idx;
+    return settings.messages[idx];
+  }
+
+  function showRingMessage(text) {
+    ringMessageEl.textContent = text;
+    ringMessageEl.hidden = false;
+  }
+
   function ringBell() {
+    const msg = pickNextMessage();
     playSound(settings.sound, settings.volume);
     changeBackground();
-    addLogEntry(new Date());
-    sendNotification();
+    showRingMessage(msg);
+    addLogEntry(new Date(), msg);
+    sendNotification(msg);
   }
 
   function start() {
@@ -425,8 +469,8 @@
   }
 
   // ---- log ----
-  function addLogEntry(date) {
-    log.unshift({ t: date.getTime() });
+  function addLogEntry(date, msg) {
+    log.unshift({ t: date.getTime(), msg: msg || "" });
     log = log.slice(0, 30);
     saveLog();
     renderLog();
@@ -447,7 +491,23 @@
       const li = document.createElement("li");
       const isToday = d.toDateString() === todayStr;
       const dateLabel = isToday ? "วันนี้" : d.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
-      li.innerHTML = `<span>${formatClock(d)} น.</span><span>${dateLabel}</span>`;
+
+      const row = document.createElement("div");
+      row.className = "log-row";
+      const timeSpan = document.createElement("span");
+      timeSpan.textContent = `${formatClock(d)} น.`;
+      const dateSpan = document.createElement("span");
+      dateSpan.textContent = dateLabel;
+      row.appendChild(timeSpan);
+      row.appendChild(dateSpan);
+      li.appendChild(row);
+
+      if (entry.msg) {
+        const msgP = document.createElement("p");
+        msgP.className = "log-msg";
+        msgP.textContent = entry.msg;
+        li.appendChild(msgP);
+      }
       logList.appendChild(li);
     });
   }
@@ -533,6 +593,35 @@
     });
   }
 
+  // ---- message list ----
+  function renderMessages() {
+    msgList.innerHTML = "";
+    if (!settings.messages.length) {
+      const li = document.createElement("li");
+      li.className = "msg-list-empty";
+      li.textContent = "ยังไม่มีข้อความ เพิ่มข้อความแรกด้านล่าง";
+      msgList.appendChild(li);
+      return;
+    }
+    settings.messages.forEach((msg, i) => {
+      const li = document.createElement("li");
+      const span = document.createElement("span");
+      span.textContent = msg;
+      const btn = document.createElement("button");
+      btn.className = "remove-msg";
+      btn.setAttribute("aria-label", "ลบข้อความนี้");
+      btn.textContent = "×";
+      btn.addEventListener("click", () => {
+        settings.messages.splice(i, 1);
+        saveSettings();
+        renderMessages();
+      });
+      li.appendChild(span);
+      li.appendChild(btn);
+      msgList.appendChild(li);
+    });
+  }
+
   // ---- wiring ----
   function initModeUI() {
     modeTabs.forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === settings.mode));
@@ -600,9 +689,25 @@
     saveSettings();
   });
 
-  messageInput.addEventListener("change", () => {
-    settings.message = messageInput.value.trim() || defaults.message;
+  function addMessageFromInput() {
+    const v = newMsgTextInput.value.trim();
+    if (!v) return;
+    if (settings.messages.includes(v)) {
+      newMsgTextInput.value = "";
+      return;
+    }
+    settings.messages.push(v);
+    newMsgTextInput.value = "";
     saveSettings();
+    renderMessages();
+  }
+
+  addMsgBtn.addEventListener("click", addMessageFromInput);
+  newMsgTextInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      addMessageFromInput();
+    }
   });
 
   notifyEnabledInput.addEventListener("change", async () => {
@@ -639,6 +744,7 @@
     ensureAudioContext();
     playSound(settings.sound, settings.volume);
     changeBackground();
+    showRingMessage(pickNextMessage());
   });
 
   // install prompt
@@ -669,13 +775,13 @@
     activeStartInput.value = settings.activeStart;
     activeEndInput.value = settings.activeEnd;
     volumeInput.value = Math.round(settings.volume * 100);
-    messageInput.value = settings.message;
     notifyEnabledInput.checked = settings.notifyEnabled;
     wakeLockInput.checked = settings.wakeLock;
     document.querySelectorAll(".sound-choice").forEach((b) => b.classList.toggle("active", b.dataset.sound === settings.sound));
 
     initModeUI();
     renderFixedTimes();
+    renderMessages();
     renderLog();
     updatePermissionHint();
     updateToggleUI();

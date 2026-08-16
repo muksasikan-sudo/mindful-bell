@@ -44,6 +44,8 @@
         </div>
       </div>
 
+      <p class="ring-message" id="ringMessage" hidden></p>
+
       <div class="primary-actions">
         <button id="toggleBtn" class="primary-btn">เริ่ม</button>
         <button id="testBtn" class="secondary-btn">ทดสอบเสียง</button>
@@ -117,8 +119,14 @@
 
     <section class="panel">
       <h2>ข้อความเตือนสติ</h2>
-      <textarea id="message" maxlength="120" rows="2">หยุดสักครู่... หายใจเข้าลึกๆ แล้วรู้สึกตัว</textarea>
-      <div class="field-row">
+      <p class="hint">ระฆังจะสุ่มหยิบข้อความเหล่านี้ขึ้นมาสลับกันทุกครั้งที่ดัง</p>
+      <ul class="msg-list" id="msgList"></ul>
+      <div class="add-msg-row">
+        <textarea id="newMsgText" maxlength="200" rows="2" placeholder="พิมพ์ข้อความเตือนสติที่อยากเพิ่ม..."></textarea>
+        <button id="addMsgBtn" class="ghost-btn">+ เพิ่มข้อความ</button>
+      </div>
+
+      <div class="field-row settings-divider">
         <label class="field checkbox-field">
           <input type="checkbox" id="notifyEnabled" checked />
           <span>แจ้งเตือนแบบข้อความ (Notification)</span>
