@@ -1,14 +1,14 @@
 :root {
-  --bg-1: #1b1533;
-  --bg-2: #2c2260;
-  --accent: #b399ff;
-  --accent-strong: #8c6bff;
+  --bg-1: #241609;
+  --bg-2: #4a3016;
+  --accent: #e0a865;
+  --accent-strong: #b3752f;
   --card-bg: rgba(255, 255, 255, 0.06);
   --card-border: rgba(255, 255, 255, 0.10);
-  --text-main: #f1edff;
-  --text-muted: #b9b0d9;
-  --success: #7fe3b4;
-  --danger: #ff8fa3;
+  --text-main: #f3e6d3;
+  --text-muted: #c9b8a0;
+  --success: #9fc98a;
+  --danger: #d97b52;
   --radius: 18px;
   color-scheme: dark;
 }
@@ -22,9 +22,9 @@ html, body {
 
 body {
   font-family: "Noto Sans Thai", "Segoe UI", system-ui, -apple-system, sans-serif;
-  background: radial-gradient(circle at 20% -10%, #3a2b7a 0%, transparent 55%),
-              radial-gradient(circle at 100% 0%, #4a2f74 0%, transparent 45%),
-              linear-gradient(180deg, var(--bg-1), var(--bg-2) 60%, #17122b);
+  background: radial-gradient(circle at 20% -10%, #5c3d1e 0%, transparent 55%),
+              radial-gradient(circle at 100% 0%, #6e4a24 0%, transparent 45%),
+              linear-gradient(180deg, var(--bg-1), var(--bg-2) 60%, #150d06);
   color: var(--text-main);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -49,8 +49,8 @@ body {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 20% -10%, rgba(58, 43, 122, 0.55) 0%, transparent 55%),
-    linear-gradient(180deg, rgba(23, 18, 43, 0.62) 0%, rgba(23, 18, 43, 0.82) 55%, rgba(15, 11, 28, 0.94) 100%);
+    radial-gradient(circle at 20% -10%, rgba(92, 61, 30, 0.55) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(28, 18, 10, 0.62) 0%, rgba(28, 18, 10, 0.82) 55%, rgba(18, 11, 6, 0.94) 100%);
 }
 
 .bg-credit {
@@ -136,7 +136,7 @@ body {
 
 .bell-glyph {
   font-size: 26px;
-  filter: drop-shadow(0 0 10px rgba(179, 153, 255, 0.6));
+  filter: drop-shadow(0 0 10px rgba(224, 168, 101, 0.6));
 }
 
 .app-header h1 {
@@ -209,7 +209,7 @@ main { display: flex; flex-direction: column; gap: 16px; }
   stroke-dasharray: 326.7;
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 0.4s linear, stroke 0.3s ease;
-  filter: drop-shadow(0 0 6px rgba(140, 107, 255, 0.7));
+  filter: drop-shadow(0 0 6px rgba(179, 117, 47, 0.7));
 }
 
 .ring-center {
@@ -268,20 +268,20 @@ button { font-family: inherit; cursor: pointer; }
 
 .primary-btn {
   flex: 1;
-  background: linear-gradient(135deg, var(--accent-strong), #6a4cff);
+  background: linear-gradient(135deg, var(--accent-strong), #8a5a22);
   color: white;
   border: none;
   border-radius: 999px;
   padding: 13px 18px;
   font-size: 15px;
   font-weight: 600;
-  box-shadow: 0 8px 20px rgba(108, 76, 255, 0.35);
+  box-shadow: 0 8px 20px rgba(179, 117, 47, 0.35);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .primary-btn:active { transform: scale(0.97); }
 .primary-btn.running {
-  background: linear-gradient(135deg, #ff8fa3, #ff6b81);
-  box-shadow: 0 8px 20px rgba(255, 111, 129, 0.35);
+  background: linear-gradient(135deg, #d97b52, #b85a34);
+  box-shadow: 0 8px 20px rgba(217, 123, 82, 0.35);
 }
 
 .secondary-btn {
@@ -517,7 +517,7 @@ button { font-family: inherit; cursor: pointer; }
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(10, 7, 20, 0.72);
+  background: rgba(15, 9, 4, 0.72);
   backdrop-filter: blur(6px);
 }
 
@@ -537,7 +537,7 @@ button { font-family: inherit; cursor: pointer; }
   max-width: 380px;
   max-height: 88vh;
   overflow-y: auto;
-  background: linear-gradient(160deg, rgba(46, 35, 99, 0.98), rgba(26, 20, 50, 0.98));
+  background: linear-gradient(160deg, rgba(74, 49, 24, 0.98), rgba(36, 22, 9, 0.98));
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 22px;
   padding: 30px 22px 24px;
@@ -641,7 +641,7 @@ button { font-family: inherit; cursor: pointer; }
 .emotion-btn:hover,
 .emotion-btn:active {
   border-color: var(--accent-strong);
-  background: rgba(140, 107, 255, 0.18);
+  background: rgba(179, 117, 47, 0.22);
   transform: translateY(-1px);
 }
 
@@ -675,7 +675,7 @@ button { font-family: inherit; cursor: pointer; }
 
 .sound-choice.active {
   border-color: var(--accent-strong);
-  background: rgba(140, 107, 255, 0.18);
+  background: rgba(179, 117, 47, 0.22);
   box-shadow: 0 0 0 1px var(--accent-strong) inset;
 }
 
