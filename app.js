@@ -90,6 +90,7 @@
   let checkinLogEntry = null;
   let checkinBeforeEmotion = null;
   let checkinAfterEmotion = null;
+  let checkinIntensity = null;
   let checkinMessageText = "";
 
   let running = false;
@@ -606,7 +607,7 @@
 
   // ---- log ----
   function addLogEntry(date, msg) {
-    const entry = { t: date.getTime(), msg: msg || "", before: null, after: null };
+    const entry = { t: date.getTime(), msg: msg || "", before: null, after: null, intensity: null };
     log.unshift(entry);
     log = log.slice(0, 30);
     saveLog();
@@ -649,7 +650,9 @@
       if (entry.before || entry.after) {
         const emoP = document.createElement("p");
         emoP.className = "log-emotions";
-        emoP.textContent = `อารมณ์ก่อน: ${entry.before || "ข้าม"} · หลัง: ${entry.after || "ข้าม"}`;
+        let text = `อารมณ์ก่อน: ${entry.before || "ข้าม"} · หลัง: ${entry.after || "ข้าม"}`;
+        if (entry.intensity) text += ` (${entry.intensity})`;
+        emoP.textContent = text;
         li.appendChild(emoP);
       }
       logList.appendChild(li);
@@ -685,6 +688,7 @@
     checkinPhase = "before";
     checkinBeforeEmotion = null;
     checkinAfterEmotion = null;
+    checkinIntensity = null;
     checkinMessageText = messageText;
     checkinOverlay.classList.add("open");
     renderCheckin();
@@ -694,6 +698,7 @@
     if (!checkinLogEntry) return;
     checkinLogEntry.before = checkinBeforeEmotion;
     checkinLogEntry.after = checkinAfterEmotion;
+    checkinLogEntry.intensity = checkinIntensity;
     saveLog();
     renderLog();
   }
@@ -771,9 +776,50 @@
       checkinBody.appendChild(
         buildEmotionGrid((key) => {
           checkinAfterEmotion = key;
-          finishCheckin();
+          if (checkinBeforeEmotion && key === checkinBeforeEmotion) {
+            checkinPhase = "intensity";
+            renderCheckin();
+          } else {
+            finishCheckin();
+          }
         })
       );
+      const skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "link-btn checkin-skip";
+      skip.textContent = "ข้ามขั้นตอนนี้";
+      skip.addEventListener("click", finishCheckin);
+      checkinBody.appendChild(skip);
+    } else if (checkinPhase === "intensity") {
+      const q = document.createElement("p");
+      q.className = "checkin-question";
+      q.textContent = `ตอนนี้ "${checkinAfterEmotion}" มากขึ้น หรือลดลง เมื่อเทียบกับก่อนหน้า?`;
+      checkinBody.appendChild(q);
+
+      const grid = document.createElement("div");
+      grid.className = "intensity-grid";
+      [
+        { key: "มากขึ้น", emoji: "📈" },
+        { key: "ลดลง", emoji: "📉" },
+      ].forEach(({ key, emoji }) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "intensity-btn";
+        const em = document.createElement("span");
+        em.className = "intensity-emoji";
+        em.textContent = emoji;
+        const label = document.createElement("span");
+        label.textContent = key;
+        btn.appendChild(em);
+        btn.appendChild(label);
+        btn.addEventListener("click", () => {
+          checkinIntensity = key;
+          finishCheckin();
+        });
+        grid.appendChild(btn);
+      });
+      checkinBody.appendChild(grid);
+
       const skip = document.createElement("button");
       skip.type = "button";
       skip.className = "link-btn checkin-skip";
