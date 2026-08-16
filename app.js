@@ -55,12 +55,27 @@
     ],
     notifyEnabled: true,
     wakeLock: false,
+    checkinEnabled: true,
     runtime: { running: false, anchorTime: null },
   };
+
+  const EMOTIONS = [
+    { key: "สุข", emoji: "🙂" },
+    { key: "ทุกข์", emoji: "😔" },
+    { key: "โกรธ", emoji: "😠" },
+    { key: "ฟุ้งซ่าน", emoji: "🌀" },
+    { key: "เสียใจ", emoji: "😢" },
+  ];
 
   let settings = loadSettings();
   let log = loadLog();
   let currentMessageIndex = -1;
+  let checkinPhase = null;
+  let checkinIsTest = false;
+  let checkinLogEntry = null;
+  let checkinBeforeEmotion = null;
+  let checkinAfterEmotion = null;
+  let checkinMessageText = "";
 
   let running = false;
   let audioCtx = null;
@@ -99,6 +114,10 @@
   const ringMessageEl = el("ringMessage");
   const notifyEnabledInput = el("notifyEnabled");
   const wakeLockInput = el("wakeLock");
+  const checkinEnabledInput = el("checkinEnabled");
+  const checkinOverlay = el("checkinOverlay");
+  const checkinBody = el("checkinBody");
+  const checkinCloseBtn = el("checkinCloseBtn");
   const permissionHint = el("permissionHint");
   const logList = el("logList");
   const clearLogBtn = el("clearLog");
@@ -388,8 +407,11 @@
     playSound(settings.sound, settings.volume);
     changeBackground();
     showRingMessage(msg);
-    addLogEntry(new Date(), msg);
+    const entry = addLogEntry(new Date(), msg);
     sendNotification(msg);
+    if (settings.checkinEnabled) {
+      openCheckin(msg, { isTest: false, logEntry: entry });
+    }
   }
 
   function start() {
@@ -470,10 +492,12 @@
 
   // ---- log ----
   function addLogEntry(date, msg) {
-    log.unshift({ t: date.getTime(), msg: msg || "" });
+    const entry = { t: date.getTime(), msg: msg || "", before: null, after: null };
+    log.unshift(entry);
     log = log.slice(0, 30);
     saveLog();
     renderLog();
+    return entry;
   }
 
   function renderLog() {
@@ -508,9 +532,158 @@
         msgP.textContent = entry.msg;
         li.appendChild(msgP);
       }
+      if (entry.before || entry.after) {
+        const emoP = document.createElement("p");
+        emoP.className = "log-emotions";
+        emoP.textContent = `อารมณ์ก่อน: ${entry.before || "ข้าม"} · หลัง: ${entry.after || "ข้าม"}`;
+        li.appendChild(emoP);
+      }
       logList.appendChild(li);
     });
   }
+
+  // ---- emotion check-in ----
+  function buildEmotionGrid(onPick) {
+    const grid = document.createElement("div");
+    grid.className = "emotion-grid";
+    EMOTIONS.forEach((e) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "emotion-btn";
+      const emoji = document.createElement("span");
+      emoji.className = "emotion-emoji";
+      emoji.textContent = e.emoji;
+      const label = document.createElement("span");
+      label.className = "emotion-label";
+      label.textContent = e.key;
+      btn.appendChild(emoji);
+      btn.appendChild(label);
+      btn.addEventListener("click", () => onPick(e.key));
+      grid.appendChild(btn);
+    });
+    return grid;
+  }
+
+  function openCheckin(messageText, opts) {
+    opts = opts || {};
+    checkinIsTest = !!opts.isTest;
+    checkinLogEntry = opts.logEntry || null;
+    checkinPhase = "before";
+    checkinBeforeEmotion = null;
+    checkinAfterEmotion = null;
+    checkinMessageText = messageText;
+    checkinOverlay.classList.add("open");
+    renderCheckin();
+  }
+
+  function persistCheckinEmotions() {
+    if (!checkinLogEntry) return;
+    checkinLogEntry.before = checkinBeforeEmotion;
+    checkinLogEntry.after = checkinAfterEmotion;
+    saveLog();
+    renderLog();
+  }
+
+  function finishCheckin() {
+    persistCheckinEmotions();
+    checkinPhase = "done";
+    renderCheckin();
+  }
+
+  function closeCheckin() {
+    if (checkinPhase && checkinPhase !== "done" && (checkinBeforeEmotion || checkinAfterEmotion)) {
+      persistCheckinEmotions();
+    }
+    checkinOverlay.classList.remove("open");
+    checkinPhase = null;
+  }
+
+  function renderCheckin() {
+    checkinBody.innerHTML = "";
+    if (checkinPhase === "before") {
+      const eyebrow = document.createElement("p");
+      eyebrow.className = "checkin-eyebrow";
+      eyebrow.textContent = "🔔 ระฆังดังแล้ว";
+      const q = document.createElement("p");
+      q.className = "checkin-question";
+      q.textContent = "ตอนนี้อารมณ์เป็นอย่างไร?";
+      checkinBody.appendChild(eyebrow);
+      checkinBody.appendChild(q);
+      checkinBody.appendChild(
+        buildEmotionGrid((key) => {
+          checkinBeforeEmotion = key;
+          checkinPhase = "message";
+          renderCheckin();
+        })
+      );
+      const skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "link-btn checkin-skip";
+      skip.textContent = "ข้ามขั้นตอนนี้";
+      skip.addEventListener("click", () => {
+        checkinPhase = "message";
+        renderCheckin();
+      });
+      checkinBody.appendChild(skip);
+    } else if (checkinPhase === "message") {
+      if (checkinBeforeEmotion) {
+        const picked = document.createElement("p");
+        picked.className = "checkin-picked";
+        picked.textContent = `คุณรู้สึก: ${checkinBeforeEmotion}`;
+        checkinBody.appendChild(picked);
+      }
+      const msg = document.createElement("p");
+      msg.className = "checkin-message";
+      msg.textContent = checkinMessageText;
+      checkinBody.appendChild(msg);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "primary-btn checkin-primary";
+      btn.textContent = "ฉันมีสติ";
+      btn.addEventListener("click", () => {
+        checkinPhase = "after";
+        renderCheckin();
+      });
+      checkinBody.appendChild(btn);
+    } else if (checkinPhase === "after") {
+      const q = document.createElement("p");
+      q.className = "checkin-question";
+      q.textContent = "ตอนนี้อารมณ์เป็นอย่างไร?";
+      const hint = document.createElement("p");
+      hint.className = "checkin-hint";
+      hint.textContent = "ให้เหลือเพียงรู้... โดยไม่ต้องตามไปเป็น";
+      checkinBody.appendChild(q);
+      checkinBody.appendChild(hint);
+      checkinBody.appendChild(
+        buildEmotionGrid((key) => {
+          checkinAfterEmotion = key;
+          finishCheckin();
+        })
+      );
+      const skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "link-btn checkin-skip";
+      skip.textContent = "ข้ามขั้นตอนนี้";
+      skip.addEventListener("click", finishCheckin);
+      checkinBody.appendChild(skip);
+    } else if (checkinPhase === "done") {
+      const done = document.createElement("p");
+      done.className = "checkin-done";
+      done.textContent = "🙏 อนุโมทนา ขอให้มีสติต่อเนื่อง";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "primary-btn checkin-primary";
+      btn.textContent = "ปิด";
+      btn.addEventListener("click", closeCheckin);
+      checkinBody.appendChild(done);
+      checkinBody.appendChild(btn);
+    }
+  }
+
+  checkinCloseBtn.addEventListener("click", closeCheckin);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && checkinOverlay.classList.contains("open")) closeCheckin();
+  });
 
   // ---- background photo ----
   function pickNextBackgroundIndex() {
@@ -728,6 +901,11 @@
     applyWakeLock();
   });
 
+  checkinEnabledInput.addEventListener("change", () => {
+    settings.checkinEnabled = checkinEnabledInput.checked;
+    saveSettings();
+  });
+
   clearLogBtn.addEventListener("click", () => {
     log = [];
     saveLog();
@@ -742,9 +920,13 @@
 
   testBtn.addEventListener("click", () => {
     ensureAudioContext();
+    const msg = pickNextMessage();
     playSound(settings.sound, settings.volume);
     changeBackground();
-    showRingMessage(pickNextMessage());
+    showRingMessage(msg);
+    if (settings.checkinEnabled) {
+      openCheckin(msg, { isTest: true, logEntry: null });
+    }
   });
 
   // install prompt
@@ -777,6 +959,7 @@
     volumeInput.value = Math.round(settings.volume * 100);
     notifyEnabledInput.checked = settings.notifyEnabled;
     wakeLockInput.checked = settings.wakeLock;
+    checkinEnabledInput.checked = settings.checkinEnabled;
     document.querySelectorAll(".sound-choice").forEach((b) => b.classList.toggle("active", b.dataset.sound === settings.sound));
 
     initModeUI();

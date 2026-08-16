@@ -120,6 +120,10 @@
     <section class="panel">
       <h2>ข้อความเตือนสติ</h2>
       <p class="hint">ระฆังจะสุ่มหยิบข้อความเหล่านี้ขึ้นมาสลับกันทุกครั้งที่ดัง</p>
+      <label class="field checkbox-field checkin-toggle">
+        <input type="checkbox" id="checkinEnabled" checked />
+        <span>เช็คอินอารมณ์ก่อน-หลัง ทุกครั้งที่ระฆังดัง</span>
+      </label>
       <ul class="msg-list" id="msgList"></ul>
       <div class="add-msg-row">
         <textarea id="newMsgText" maxlength="200" rows="2" placeholder="พิมพ์ข้อความเตือนสติที่อยากเพิ่ม..."></textarea>
@@ -162,6 +166,13 @@
   <footer class="app-footer">
     <span>ทำงานแบบออฟไลน์ได้ · ตั้งค่าเก็บไว้ในเครื่องนี้เท่านั้น</span>
   </footer>
+</div>
+
+<div class="checkin-overlay" id="checkinOverlay">
+  <div class="checkin-card">
+    <button class="checkin-close" id="checkinCloseBtn" aria-label="ปิด">×</button>
+    <div class="checkin-body" id="checkinBody"></div>
+  </div>
 </div>
 
 <script src="app.js"></script>
