@@ -3,7 +3,30 @@
 
   const STORAGE_KEY = "mindfulBell.settings.v1";
   const LOG_KEY = "mindfulBell.log.v1";
+  const BG_KEY = "mindfulBell.bg.v1";
   const CIRC = 2 * Math.PI * 52;
+
+  // Free-licensed photos from Wikimedia Commons (temples, Buddha statues, lotus flowers).
+  const BACKGROUNDS = [
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wat_Arun_Temple_Of_Dawn_%28121412175%29.jpeg/1920px-Wat_Arun_Temple_Of_Dawn_%28121412175%29.jpeg", caption: "วัดอรุณ ยามเย็น", credit: "Wikimedia Commons · CC BY 3.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Temple_of_the_Emerald_Buddha.jpg/1920px-Temple_of_the_Emerald_Buddha.jpg", caption: "วัดพระแก้ว", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Wat_Phra_Kaew_by_Ninara_TSP_edit_crop.jpg/1920px-Wat_Phra_Kaew_by_Ninara_TSP_edit_crop.jpg", caption: "วัดพระศรีรัตนศาสดาราม", credit: "Wikimedia Commons · CC BY 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Wat_Pho%2C_Bangkok%2C_Tailandia%2C_2013-08-22%2C_DD_05.jpg/1920px-Wat_Pho%2C_Bangkok%2C_Tailandia%2C_2013-08-22%2C_DD_05.jpg", caption: "พระพุทธไสยาสน์ วัดโพธิ์", credit: "Wikimedia Commons · CC BY-SA 3.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Big_Buddha_Phuket%2C_Thailand.jpg/1920px-Big_Buddha_Phuket%2C_Thailand.jpg", caption: "พระใหญ่ภูเก็ต", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Bangkok_Wat_Traimit_01.jpg/1920px-Bangkok_Wat_Traimit_01.jpg", caption: "พระพุทธรูปทองคำ วัดไตรมิตร", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Linh_Ung_Pagoda_morning_mist_Ba_Na_Hills_Da_Nang_Vietnam.jpg/1920px-Linh_Ung_Pagoda_morning_mist_Ba_Na_Hills_Da_Nang_Vietnam.jpg", caption: "พระพุทธรูปในสายหมอก", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/20171107_White_Temple_Chiang_Rai_0197_DxO.jpg/1920px-20171107_White_Temple_Chiang_Rai_0197_DxO.jpg", caption: "วัดร่องขุ่น เชียงราย", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/White_Temple_I.jpg/1920px-White_Temple_I.jpg", caption: "วัดร่องขุ่น", credit: "Wikimedia Commons · CC BY 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Lotus_Pond.jpg/1920px-Lotus_Pond.jpg", caption: "บัวในบึง", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Lotus_flower_%28978659%29.jpg/1920px-Lotus_flower_%28978659%29.jpg", caption: "ดอกบัว", credit: "Wikimedia Commons · CC0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Lotus_in_a_Pond.jpg/1920px-Lotus_in_a_Pond.jpg", caption: "ดอกบัวในสระ", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Pink_and_white_Nymphaea_water_lily_flowers%2C_%D0%B1%D0%B5%D0%BB_%D0%B8_%D1%80%D0%BE%D0%B7%D0%BE%D0%B2_%D0%BB%D0%BE%D1%82%D0%BE%D1%81.jpg/1920px-Pink_and_white_Nymphaea_water_lily_flowers%2C_%D0%B1%D0%B5%D0%BB_%D0%B8_%D1%80%D0%BE%D0%B7%D0%BE%D0%B2_%D0%BB%D0%BE%D1%82%D0%BE%D1%81.jpg", caption: "บัวสายสีชมพู", credit: "Wikimedia Commons · CC0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Sukhothai%2C_Lotus_flower%2C_Thailand.jpg/1920px-Sukhothai%2C_Lotus_flower%2C_Thailand.jpg", caption: "ดอกบัว สุโขทัย", credit: "Wikimedia Commons · CC BY 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Pink_lotus_flower_blooming_in_a_village_lake_waters_ramanathapuram_tamilnadu_India.jpg/1920px-Pink_lotus_flower_blooming_in_a_village_lake_waters_ramanathapuram_tamilnadu_India.jpg", caption: "ดอกบัวบาน", credit: "Wikimedia Commons · CC BY 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/c/c9/Cherry_blossom_at_the_rock_garden_of_Ry%C5%8Dan-ji_Temple_in_Kyoto%2C_Japan.jpg", caption: "ซากุระ วัดเรียวอันจิ", credit: "Wikimedia Commons · CC BY-SA 4.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Myohoin_temple_with_cherry_blossoms_in_Kyoto_-_Apr_7%2C_2014.jpg/1920px-Myohoin_temple_with_cherry_blossoms_in_Kyoto_-_Apr_7%2C_2014.jpg", caption: "ซากุระ วัดเมียวโฮอิน", credit: "Wikimedia Commons · CC BY 2.0" },
+    { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Cherry_blossoms_at_Hasedera_Temple_%E9%95%B7%E8%B0%B7%E5%AF%BA%E6%A8%B1%E8%8A%B1_-_panoramio.jpg/1920px-Cherry_blossoms_at_Hasedera_Temple_%E9%95%B7%E8%B0%B7%E5%AF%BA%E6%A8%B1%E8%8A%B1_-_panoramio.jpg", caption: "ซากุระ วัดฮาเซเดระ", credit: "Wikimedia Commons · CC BY 3.0" },
+  ];
 
   const SOUND_PRESETS = {
     tibetan: { base: 196.0, decay: 7.5, partials: [1, 1.49, 2.0, 2.66, 3.32, 4.07], gain: [1, 0.55, 0.4, 0.25, 0.15, 0.1] },
@@ -67,6 +90,10 @@
   const logList = el("logList");
   const clearLogBtn = el("clearLog");
   const installBtn = el("installBtn");
+  const bgCreditEl = el("bgCredit");
+  const bgLayers = [el("bgLayerA"), el("bgLayerB")];
+  let activeBgLayerIndex = 0;
+  let currentBgIndex = -1;
 
   // ---- storage ----
   function loadSettings() {
@@ -316,6 +343,7 @@
 
   function ringBell() {
     playSound(settings.sound, settings.volume);
+    changeBackground();
     addLogEntry(new Date());
     sendNotification();
   }
@@ -422,6 +450,57 @@
       li.innerHTML = `<span>${formatClock(d)} น.</span><span>${dateLabel}</span>`;
       logList.appendChild(li);
     });
+  }
+
+  // ---- background photo ----
+  function pickNextBackgroundIndex() {
+    if (BACKGROUNDS.length <= 1) return 0;
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * BACKGROUNDS.length);
+    } while (idx === currentBgIndex);
+    return idx;
+  }
+
+  function applyBackground(idx, layerEl) {
+    const item = BACKGROUNDS[idx];
+    currentBgIndex = idx;
+    const prevLayer = bgLayers[activeBgLayerIndex];
+    layerEl.style.backgroundImage = `url("${item.url}")`;
+    layerEl.classList.add("active");
+    if (prevLayer !== layerEl) prevLayer.classList.remove("active");
+    activeBgLayerIndex = bgLayers.indexOf(layerEl);
+    bgCreditEl.textContent = `${item.caption} · ${item.credit}`;
+    bgCreditEl.classList.add("show");
+    try {
+      localStorage.setItem(BG_KEY, String(idx));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function changeBackground() {
+    const idx = pickNextBackgroundIndex();
+    const item = BACKGROUNDS[idx];
+    const nextLayer = bgLayers[1 - activeBgLayerIndex];
+    const img = new Image();
+    img.onload = () => applyBackground(idx, nextLayer);
+    img.onerror = () => {
+      /* offline or blocked: keep current background */
+    };
+    img.src = item.url;
+  }
+
+  function restoreBackground() {
+    try {
+      const raw = localStorage.getItem(BG_KEY);
+      if (raw === null) return;
+      const idx = parseInt(raw, 10);
+      if (!Number.isInteger(idx) || !BACKGROUNDS[idx]) return;
+      applyBackground(idx, bgLayers[0]);
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   // ---- fixed time list ----
@@ -559,6 +638,7 @@
   testBtn.addEventListener("click", () => {
     ensureAudioContext();
     playSound(settings.sound, settings.volume);
+    changeBackground();
   });
 
   // install prompt
@@ -600,6 +680,7 @@
     updatePermissionHint();
     updateToggleUI();
     updateUI();
+    restoreBackground();
     primeAudioOnFirstInteraction();
 
     if ("serviceWorker" in navigator) {
