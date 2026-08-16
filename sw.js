@@ -1,4 +1,4 @@
-const CACHE_NAME = "mindful-bell-v1";
+const CACHE_NAME = "mindful-bell-v2";
 const IMAGE_CACHE_NAME = "mindful-bell-images-v1";
 const ASSETS = [
   "./",
@@ -49,19 +49,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // App shell: network-first so a new deploy shows up on the very next
+  // reload, falling back to the cached copy only when offline.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          if (response && response.ok && response.type === "basic") {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.ok && response.type === "basic") {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
 
