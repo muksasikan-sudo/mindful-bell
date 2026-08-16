@@ -56,10 +56,6 @@
     notifyEnabled: true,
     wakeLock: false,
     checkinEnabled: true,
-    ttsEnabled: true,
-    ttsVoiceURI: "",
-    ttsPitch: 1,
-    ttsRate: 0.95,
     runtime: { running: false, anchorTime: null },
   };
 
@@ -72,19 +68,9 @@
     { key: "เฉยๆ", emoji: "😐" },
   ];
 
-  const VOICE_PRESETS = {
-    "ชาย": { pitch: 0.85, rate: 0.92, gender: "male" },
-    "หญิง": { pitch: 1.05, rate: 0.95, gender: "female" },
-    "พระ": { pitch: 0.7, rate: 0.82, gender: "male" },
-    "แม่ชี": { pitch: 0.95, rate: 0.85, gender: "female" },
-    "เด็กชาย": { pitch: 1.3, rate: 1.0, gender: "male" },
-    "เด็กหญิง": { pitch: 1.4, rate: 1.0, gender: "female" },
-  };
-
   let settings = loadSettings();
   let log = loadLog();
   let currentMessageIndex = -1;
-  let availableVoices = [];
   let checkinPhase = null;
   let checkinIsTest = false;
   let checkinLogEntry = null;
@@ -135,14 +121,6 @@
   const checkinOverlay = el("checkinOverlay");
   const checkinBody = el("checkinBody");
   const checkinCloseBtn = el("checkinCloseBtn");
-  const ttsEnabledInput = el("ttsEnabled");
-  const ttsOptionsEl = el("ttsOptions");
-  const ttsVoiceSelect = el("ttsVoice");
-  const voicePresetGrid = el("voicePresetGrid");
-  const ttsPitchInput = el("ttsPitch");
-  const ttsRateInput = el("ttsRate");
-  const testVoiceBtn = el("testVoiceBtn");
-  const ttsHintEl = el("ttsHint");
   const permissionHint = el("permissionHint");
   const logList = el("logList");
   const clearLogBtn = el("clearLog");
@@ -257,10 +235,7 @@
   }
 
   function primeAudioOnFirstInteraction() {
-    const handler = () => {
-      ensureAudioContext();
-      primeSpeech();
-    };
+    const handler = () => ensureAudioContext();
     ["pointerdown", "keydown"].forEach((evt) => document.addEventListener(evt, handler, { once: true }));
   }
 
@@ -312,92 +287,6 @@
       permissionHint.textContent = "ติ๊กถูกช่องด้านบนเพื่อขอสิทธิ์แจ้งเตือนแบบข้อความ";
       permissionHint.className = "hint";
     }
-  }
-
-  // ---- text-to-speech ----
-  const ttsSupported = "speechSynthesis" in window;
-
-  function loadVoices() {
-    if (!ttsSupported) return;
-    const voices = speechSynthesis.getVoices();
-    if (voices.length) {
-      availableVoices = voices;
-      populateVoiceSelect();
-    }
-  }
-
-  function populateVoiceSelect() {
-    const thai = availableVoices.filter((v) => v.lang && v.lang.toLowerCase().startsWith("th"));
-    const others = availableVoices.filter((v) => !(v.lang && v.lang.toLowerCase().startsWith("th")));
-    const ordered = [...thai, ...others];
-
-    ttsVoiceSelect.innerHTML = "";
-    const defaultOpt = document.createElement("option");
-    defaultOpt.value = "";
-    defaultOpt.textContent = "ค่าเริ่มต้นของเบราว์เซอร์";
-    ttsVoiceSelect.appendChild(defaultOpt);
-
-    ordered.forEach((v) => {
-      const opt = document.createElement("option");
-      opt.value = v.voiceURI;
-      opt.textContent = `${v.name} (${v.lang})`;
-      ttsVoiceSelect.appendChild(opt);
-    });
-
-    const hasMatch = ordered.some((v) => v.voiceURI === settings.ttsVoiceURI);
-    ttsVoiceSelect.value = hasMatch ? settings.ttsVoiceURI : "";
-
-    if (!thai.length) {
-      ttsHintEl.textContent = "ไม่พบเสียงพูดภาษาไทยในเครื่องนี้ การอ่านอาจไม่ชัดหรือไม่ทำงาน ลองติดตั้งภาษาไทยเพิ่มในตั้งค่าเบราว์เซอร์หรืออุปกรณ์";
-      ttsHintEl.className = "hint warn";
-    } else {
-      ttsHintEl.textContent = "";
-      ttsHintEl.className = "hint";
-    }
-  }
-
-  function findVoiceForGender(gender) {
-    const thai = availableVoices.filter((v) => v.lang && v.lang.toLowerCase().startsWith("th"));
-    const pool = thai.length ? thai : availableVoices;
-    let match;
-    if (gender === "female") {
-      match = pool.find((v) => /female|หญิง|woman/i.test(v.name));
-    } else {
-      match = pool.find((v) => /\bmale\b|ชาย|\bman\b/i.test(v.name) && !/female/i.test(v.name));
-    }
-    return match || pool[0] || null;
-  }
-
-  function primeSpeech() {
-    if (!ttsSupported) return;
-    try {
-      speechSynthesis.speak(new SpeechSynthesisUtterance(""));
-    } catch (e) {
-      /* ignore */
-    }
-  }
-
-  function speakMessage(text) {
-    if (!settings.ttsEnabled || !ttsSupported || !text) return;
-    try {
-      speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "th-TH";
-      utter.pitch = Math.max(0, Math.min(2, settings.ttsPitch));
-      utter.rate = Math.max(0.1, Math.min(2, settings.ttsRate));
-      utter.volume = Math.max(0, Math.min(1, settings.volume));
-      if (settings.ttsVoiceURI) {
-        const v = availableVoices.find((v) => v.voiceURI === settings.ttsVoiceURI);
-        if (v) utter.voice = v;
-      }
-      speechSynthesis.speak(utter);
-    } catch (e) {
-      /* ignore */
-    }
-  }
-
-  function updateTtsOptionsVisibility() {
-    ttsOptionsEl.style.display = settings.ttsEnabled ? "" : "none";
   }
 
   // ---- wake lock ----
@@ -521,7 +410,6 @@
     playSound(settings.sound, settings.volume);
     changeBackground();
     showRingMessage(msg);
-    setTimeout(() => speakMessage(msg), 1100);
     const entry = addLogEntry(new Date(), msg);
     sendNotification(msg);
     if (settings.checkinEnabled) {
@@ -1073,57 +961,6 @@
     saveSettings();
   });
 
-  ttsEnabledInput.addEventListener("change", () => {
-    settings.ttsEnabled = ttsEnabledInput.checked;
-    updateTtsOptionsVisibility();
-    saveSettings();
-  });
-
-  ttsVoiceSelect.addEventListener("change", () => {
-    settings.ttsVoiceURI = ttsVoiceSelect.value;
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.remove("active"));
-    saveSettings();
-  });
-
-  ttsPitchInput.addEventListener("input", () => {
-    settings.ttsPitch = Number(ttsPitchInput.value) / 100;
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.remove("active"));
-    saveSettings();
-  });
-
-  ttsRateInput.addEventListener("input", () => {
-    settings.ttsRate = Number(ttsRateInput.value) / 100;
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.remove("active"));
-    saveSettings();
-  });
-
-  voicePresetGrid.addEventListener("click", (e) => {
-    const btn = e.target.closest(".voice-preset");
-    if (!btn) return;
-    const preset = VOICE_PRESETS[btn.dataset.preset];
-    if (!preset) return;
-    settings.ttsPitch = preset.pitch;
-    settings.ttsRate = preset.rate;
-    const matched = findVoiceForGender(preset.gender);
-    if (matched) {
-      settings.ttsVoiceURI = matched.voiceURI;
-      ttsVoiceSelect.value = matched.voiceURI;
-    }
-    ttsPitchInput.value = Math.round(preset.pitch * 100);
-    ttsRateInput.value = Math.round(preset.rate * 100);
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.toggle("active", b === btn));
-    saveSettings();
-    ensureAudioContext();
-    primeSpeech();
-    speakMessage(`นี่คือตัวอย่างเสียง${btn.dataset.preset}`);
-  });
-
-  testVoiceBtn.addEventListener("click", () => {
-    ensureAudioContext();
-    primeSpeech();
-    speakMessage(pickNextMessage());
-  });
-
   clearLogBtn.addEventListener("click", () => {
     log = [];
     saveLog();
@@ -1142,7 +979,6 @@
     playSound(settings.sound, settings.volume);
     changeBackground();
     showRingMessage(msg);
-    setTimeout(() => speakMessage(msg), 1100);
     if (settings.checkinEnabled) {
       openCheckin(msg, { isTest: true, logEntry: null });
     }
@@ -1180,22 +1016,6 @@
     wakeLockInput.checked = settings.wakeLock;
     checkinEnabledInput.checked = settings.checkinEnabled;
     document.querySelectorAll(".sound-choice").forEach((b) => b.classList.toggle("active", b.dataset.sound === settings.sound));
-
-    ttsEnabledInput.checked = settings.ttsEnabled;
-    ttsPitchInput.value = Math.round(settings.ttsPitch * 100);
-    ttsRateInput.value = Math.round(settings.ttsRate * 100);
-    updateTtsOptionsVisibility();
-    if (!ttsSupported) {
-      settings.ttsEnabled = false;
-      ttsEnabledInput.checked = false;
-      ttsEnabledInput.disabled = true;
-      ttsHintEl.textContent = "เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง";
-      ttsHintEl.className = "hint warn";
-      updateTtsOptionsVisibility();
-    } else {
-      loadVoices();
-      speechSynthesis.onvoiceschanged = loadVoices;
-    }
 
     initModeUI();
     renderFixedTimes();
