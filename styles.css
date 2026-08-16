@@ -72,6 +72,47 @@ body {
 
 .bg-credit.show { opacity: 1; }
 
+/* Mobile-first: no side margins exist around the full-width app column,
+   so the quotes render in-flow as a small intro banner above the header
+   instead of being hidden behind the cards. */
+.bg-quote {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto 10px;
+  max-width: 480px;
+  padding: 0 24px;
+  font-size: 12px;
+  line-height: 1.85;
+  font-style: italic;
+  letter-spacing: 0.2px;
+  white-space: pre-line;
+  text-align: center;
+  color: rgba(247, 224, 178, 0.78);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  user-select: none;
+}
+
+.bg-quote-left { margin-top: 18px; }
+.bg-quote-right { margin-bottom: 18px; }
+
+/* Wide viewports: the app column has real margins on both sides, so pin
+   the quotes there instead — fixed, always visible, never scrolls away. */
+@media (min-width: 980px) {
+  .bg-quote {
+    position: fixed;
+    top: 80px;
+    z-index: 0;
+    margin: 0;
+    max-width: 260px;
+    padding: 0;
+    font-size: 13px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 0, 0, 0.4);
+  }
+  .bg-quote-left { left: 24px; text-align: left; }
+  .bg-quote-right { right: 24px; text-align: right; margin-bottom: 0; }
+}
+
 .app {
   position: relative;
   z-index: 1;
