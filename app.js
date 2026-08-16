@@ -670,7 +670,7 @@
     } else if (checkinPhase === "done") {
       const done = document.createElement("p");
       done.className = "checkin-done";
-      done.textContent = "🙏 อนุโมทนา ขอให้มีสติต่อเนื่อง";
+      done.textContent = "ขอกราบสาธุ อนุโมทนาบุญกับทุกท่าน 🙏 สาธุ สาธุ สาธุ";
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "primary-btn checkin-primary";
