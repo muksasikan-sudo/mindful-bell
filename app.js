@@ -112,6 +112,7 @@
   const msgList = el("msgList");
   const newMsgTextInput = el("newMsgText");
   const addMsgBtn = el("addMsgBtn");
+  const resetMsgsBtn = el("resetMsgsBtn");
   const ringMessageEl = el("ringMessage");
   const notifyEnabledInput = el("notifyEnabled");
   const wakeLockInput = el("wakeLock");
@@ -882,6 +883,13 @@
       e.preventDefault();
       addMessageFromInput();
     }
+  });
+
+  resetMsgsBtn.addEventListener("click", () => {
+    if (!window.confirm("คืนค่าข้อความเตือนสติกลับเป็นชุดเริ่มต้น 8 ข้อความ? ข้อความที่เพิ่ม/ลบเองจะหายไป")) return;
+    settings.messages = structuredCloneSafe(defaults.messages);
+    saveSettings();
+    renderMessages();
   });
 
   notifyEnabledInput.addEventListener("change", async () => {
