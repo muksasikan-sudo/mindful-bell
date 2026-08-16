@@ -65,6 +65,7 @@
     { key: "โกรธ", emoji: "😠" },
     { key: "ฟุ้งซ่าน", emoji: "🌀" },
     { key: "เสียใจ", emoji: "😢" },
+    { key: "เฉยๆ", emoji: "😐" },
   ];
 
   let settings = loadSettings();
