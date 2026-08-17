@@ -542,14 +542,12 @@
     const entry = addLogEntry(new Date(), msg);
     sendNotification(msg);
 
-    speakMessage(SESSION_INTRO, () => {
-      playSound("chime", settings.volume);
-      setTimeout(() => {
-        if (settings.checkinEnabled) {
-          openCheckin(msg, { isTest: false, logEntry: entry });
-        }
-      }, bellDecayMs("chime"));
-    });
+    playSound("chime", settings.volume);
+    setTimeout(() => {
+      if (settings.checkinEnabled) {
+        openCheckin(msg, { isTest: false, logEntry: entry });
+      }
+    }, bellDecayMs("chime"));
   }
 
   function start() {
@@ -813,7 +811,7 @@
         renderCheckin();
       });
       checkinBody.appendChild(btn);
-      speakMessage(checkinMessageText);
+      speakMessage(SESSION_INTRO, () => speakMessage(checkinMessageText));
     } else if (checkinPhase === "after") {
       const q = document.createElement("p");
       q.className = "checkin-question";
@@ -1146,14 +1144,12 @@
     changeBackground();
     showRingMessage(msg);
 
-    speakMessage(SESSION_INTRO, () => {
-      playSound("chime", settings.volume);
-      setTimeout(() => {
-        if (settings.checkinEnabled) {
-          openCheckin(msg, { isTest: true, logEntry: null });
-        }
-      }, bellDecayMs("chime"));
-    });
+    playSound("chime", settings.volume);
+    setTimeout(() => {
+      if (settings.checkinEnabled) {
+        openCheckin(msg, { isTest: true, logEntry: null });
+      }
+    }, bellDecayMs("chime"));
   });
 
   // install prompt
