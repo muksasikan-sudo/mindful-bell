@@ -58,8 +58,8 @@
     checkinEnabled: true,
     ttsEnabled: true,
     ttsVoiceURI: "",
-    ttsPitch: 1,
-    ttsRate: 0.95,
+    ttsPitch: 0.98,
+    ttsRate: 0.78,
     runtime: { running: false, anchorTime: null },
   };
 
@@ -74,7 +74,7 @@
 
   const VOICE_PRESETS = {
     "ชาย": { pitch: 0.85, rate: 0.92, gender: "male" },
-    "หญิง": { pitch: 1.05, rate: 0.95, gender: "female" },
+    "หญิง": { pitch: 0.98, rate: 0.78, gender: "female" },
     "พระ": { pitch: 0.7, rate: 0.82, gender: "male" },
     "แม่ชี": { pitch: 0.95, rate: 0.85, gender: "female" },
     "เด็กชาย": { pitch: 1.3, rate: 1.0, gender: "male" },
@@ -85,6 +85,7 @@
   let log = loadLog();
   let currentMessageIndex = -1;
   let availableVoices = [];
+  let autoVoicePicked = false;
   let checkinPhase = null;
   let checkinIsTest = false;
   let checkinLogEntry = null;
@@ -344,11 +345,27 @@
       ttsVoiceSelect.appendChild(opt);
     });
 
+    let autoPickedNonFemale = false;
+    if (!settings.ttsVoiceURI && !autoVoicePicked && ordered.length) {
+      autoVoicePicked = true;
+      const femaleVoice = findVoiceForGender("female");
+      if (femaleVoice) {
+        settings.ttsVoiceURI = femaleVoice.voiceURI;
+        saveSettings();
+        document.querySelectorAll(".voice-preset").forEach((b) => b.classList.toggle("active", b.dataset.preset === "หญิง"));
+        autoPickedNonFemale = voiceGenderConfidence(femaleVoice, "female") !== "confident";
+      }
+    }
+
     const hasMatch = ordered.some((v) => v.voiceURI === settings.ttsVoiceURI);
     ttsVoiceSelect.value = hasMatch ? settings.ttsVoiceURI : "";
 
     if (!thai.length) {
       ttsHintEl.textContent = "ไม่พบเสียงพูดภาษาไทยในเครื่องนี้ การอ่านอาจไม่ชัดหรือไม่ทำงาน ลองติดตั้งภาษาไทยเพิ่มในตั้งค่าเบราว์เซอร์หรืออุปกรณ์";
+      ttsHintEl.className = "hint warn";
+    } else if (autoPickedNonFemale) {
+      const picked = availableVoices.find((v) => v.voiceURI === settings.ttsVoiceURI);
+      ttsHintEl.textContent = `ไม่พบเสียงผู้หญิงภาษาไทยในเครื่องนี้ กำลังใช้เสียง "${picked ? picked.name : ""}" แทน (อาจฟังดูไม่ใช่เสียงผู้หญิง) ลองดูช่องเลือกเสียงพูดด้านบนว่ามีตัวเลือกอื่นไหม`;
       ttsHintEl.className = "hint warn";
     } else {
       ttsHintEl.textContent = "";
@@ -356,16 +373,31 @@
     }
   }
 
+  // The Web Speech API exposes no gender field on a voice, so this falls back to
+  // matching known voice names by platform (Windows/macOS/iOS/Android/Chrome OS).
+  const FEMALE_NAME_HINTS = ["premwadee", "achara", "kanya", "narisa", "female", "หญิง", "woman", "zira", "samantha", "victoria", "susan", "karen", "moira", "tessa", "catherine", "kate", "linda", "google ไทย หญิง"];
+  const MALE_NAME_HINTS = ["pattara", "niwat", "ekkarat", "male", "ชาย", "\\bman\\b", "david", "mark", "daniel", "george", "fred", "alex", "james"];
+
   function findVoiceForGender(gender) {
     const thai = availableVoices.filter((v) => v.lang && v.lang.toLowerCase().startsWith("th"));
     const pool = thai.length ? thai : availableVoices;
-    let match;
-    if (gender === "female") {
-      match = pool.find((v) => /female|หญิง|woman/i.test(v.name));
-    } else {
-      match = pool.find((v) => /\bmale\b|ชาย|\bman\b/i.test(v.name) && !/female/i.test(v.name));
-    }
-    return match || pool[0] || null;
+    const hints = gender === "female" ? FEMALE_NAME_HINTS : MALE_NAME_HINTS;
+    const oppositeHints = gender === "female" ? MALE_NAME_HINTS : FEMALE_NAME_HINTS;
+
+    const named = pool.find((v) => hints.some((h) => new RegExp(h, "i").test(v.name)));
+    if (named) return named;
+
+    const notOpposite = pool.filter((v) => !oppositeHints.some((h) => new RegExp(h, "i").test(v.name)));
+    return notOpposite[0] || pool[0] || null;
+  }
+
+  function voiceGenderConfidence(voice, gender) {
+    if (!voice) return "none";
+    const hints = gender === "female" ? FEMALE_NAME_HINTS : MALE_NAME_HINTS;
+    const oppositeHints = gender === "female" ? MALE_NAME_HINTS : FEMALE_NAME_HINTS;
+    if (hints.some((h) => new RegExp(h, "i").test(voice.name))) return "confident";
+    if (oppositeHints.some((h) => new RegExp(h, "i").test(voice.name))) return "opposite";
+    return "unknown";
   }
 
   function primeSpeech() {
@@ -1130,6 +1162,14 @@
     ttsRateInput.value = Math.round(preset.rate * 100);
     document.querySelectorAll(".voice-preset").forEach((b) => b.classList.toggle("active", b === btn));
     saveSettings();
+
+    if (matched && voiceGenderConfidence(matched, preset.gender) !== "confident") {
+      ttsHintEl.textContent = `ไม่พบเสียงที่ตรงกับ "${btn.dataset.preset}" ในเครื่องนี้ กำลังใช้เสียง "${matched.name}" แทน`;
+      ttsHintEl.className = "hint warn";
+    } else if (matched) {
+      ttsHintEl.textContent = "";
+      ttsHintEl.className = "hint";
+    }
     ensureAudioContext();
     primeSpeech();
     speakMessage(`นี่คือตัวอย่างเสียง${btn.dataset.preset}`);
