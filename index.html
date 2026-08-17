@@ -156,6 +156,45 @@
     </section>
 
     <section class="panel">
+      <h2>เสียงอ่านข้อความ</h2>
+      <label class="field checkbox-field">
+        <input type="checkbox" id="ttsEnabled" checked />
+        <span>อ่านข้อความเตือนสติออกเสียง ทุกครั้งที่ระฆังดัง</span>
+      </label>
+
+      <div id="ttsOptions">
+        <label class="field">
+          <span>เลือกเสียงพูด</span>
+          <select id="ttsVoice"></select>
+        </label>
+
+        <span class="field-label">เลือกโทนเสียงสำเร็จรูป</span>
+        <div class="voice-preset-grid" id="voicePresetGrid">
+          <button type="button" class="voice-preset" data-preset="ชาย">👨<span>ชาย</span></button>
+          <button type="button" class="voice-preset" data-preset="หญิง">👩<span>หญิง</span></button>
+          <button type="button" class="voice-preset" data-preset="พระ">🙏<span>พระ</span></button>
+          <button type="button" class="voice-preset" data-preset="แม่ชี">🤍<span>แม่ชี</span></button>
+          <button type="button" class="voice-preset" data-preset="เด็กชาย">👦<span>เด็กชาย</span></button>
+          <button type="button" class="voice-preset" data-preset="เด็กหญิง">👧<span>เด็กหญิง</span></button>
+        </div>
+
+        <div class="field-row">
+          <label class="field">
+            <span>เสียงทุ้ม–แหลม</span>
+            <input type="range" id="ttsPitch" min="50" max="200" value="100" />
+          </label>
+          <label class="field">
+            <span>ความเร็วในการอ่าน</span>
+            <input type="range" id="ttsRate" min="50" max="150" value="95" />
+          </label>
+        </div>
+
+        <button id="testVoiceBtn" class="ghost-btn">▶ ทดสอบเสียงอ่าน</button>
+        <p class="hint" id="ttsHint"></p>
+      </div>
+    </section>
+
+    <section class="panel">
       <div class="panel-header-row">
         <h2>ประวัติการแจ้งเตือน</h2>
         <button id="clearLog" class="link-btn">ล้างประวัติ</button>
