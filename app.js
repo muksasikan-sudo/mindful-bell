@@ -577,13 +577,10 @@
     showRingMessage(msg);
     const entry = addLogEntry(new Date(), msg);
     sendNotification(msg);
-
-    speakMessage(msg, () => {
-      playSound(settings.sound, settings.volume);
-      if (settings.checkinEnabled) {
-        openCheckin(msg, { isTest: false, logEntry: entry });
-      }
-    });
+    playSound(settings.sound, settings.volume);
+    if (settings.checkinEnabled) {
+      openCheckin(msg, { isTest: false, logEntry: entry });
+    }
   }
 
   function start() {
@@ -847,6 +844,7 @@
         renderCheckin();
       });
       checkinBody.appendChild(btn);
+      speakMessage(checkinMessageText);
     } else if (checkinPhase === "after") {
       const q = document.createElement("p");
       q.className = "checkin-question";
@@ -1232,13 +1230,10 @@
     const msg = pickNextMessage();
     changeBackground();
     showRingMessage(msg);
-
-    speakMessage(msg, () => {
-      playSound(settings.sound, settings.volume);
-      if (settings.checkinEnabled) {
-        openCheckin(msg, { isTest: true, logEntry: null });
-      }
-    });
+    playSound(settings.sound, settings.volume);
+    if (settings.checkinEnabled) {
+      openCheckin(msg, { isTest: true, logEntry: null });
+    }
   });
 
   // install prompt
