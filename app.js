@@ -571,6 +571,11 @@
     ringMessageEl.hidden = false;
   }
 
+  function bellDecayMs() {
+    const preset = SOUND_PRESETS[settings.sound] || SOUND_PRESETS.tibetan;
+    return preset.decay * 1000 + 300;
+  }
+
   function ringBell() {
     const msg = pickNextMessage();
     changeBackground();
@@ -578,9 +583,11 @@
     const entry = addLogEntry(new Date(), msg);
     sendNotification(msg);
     playSound(settings.sound, settings.volume);
-    if (settings.checkinEnabled) {
-      openCheckin(msg, { isTest: false, logEntry: entry });
-    }
+    setTimeout(() => {
+      if (settings.checkinEnabled) {
+        openCheckin(msg, { isTest: false, logEntry: entry });
+      }
+    }, bellDecayMs());
   }
 
   function start() {
@@ -1231,9 +1238,11 @@
     changeBackground();
     showRingMessage(msg);
     playSound(settings.sound, settings.volume);
-    if (settings.checkinEnabled) {
-      openCheckin(msg, { isTest: true, logEntry: null });
-    }
+    setTimeout(() => {
+      if (settings.checkinEnabled) {
+        openCheckin(msg, { isTest: true, logEntry: null });
+      }
+    }, bellDecayMs());
   });
 
   // install prompt
