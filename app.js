@@ -4,6 +4,8 @@
   const STORAGE_KEY = "mindfulBell.settings.v1";
   const LOG_KEY = "mindfulBell.log.v1";
   const BG_KEY = "mindfulBell.bg.v1";
+  const MERIT_KEY = "mindfulBell.merit.v1";
+  const MINDFUL_MERIT_POINTS = 5;
   const CIRC = 2 * Math.PI * 52;
 
   // Free-licensed photos from Wikimedia Commons (temples, Buddha statues, lotus flowers).
@@ -80,6 +82,8 @@
     ttsVoiceURI: "",
     ttsPitch: 0.98,
     ttsRate: 0.78,
+    meritReminderEnabled: true,
+    meritReminderTime: "21:00",
     runtime: { running: false, anchorTime: null },
   };
 
@@ -113,6 +117,10 @@
   let checkinIntensity = null;
   let checkinPosture = null;
   let checkinMessageText = "";
+  let meritLog = loadMeritLog();
+  let meritReminderTimerHandle = null;
+  let meritPhase = null;
+  let meritSummaryText = "";
 
   let running = false;
   let audioCtx = null;
@@ -160,6 +168,17 @@
   const permissionHint = el("permissionHint");
   const logList = el("logList");
   const clearLogBtn = el("clearLog");
+  const meritTotalEl = el("meritTotal");
+  const meritListEl = el("meritList");
+  const newMeritLabelInput = el("newMeritLabel");
+  const newMeritPointsInput = el("newMeritPoints");
+  const addMeritBtn = el("addMeritBtn");
+  const meritReminderEnabledInput = el("meritReminderEnabled");
+  const meritReminderTimeInput = el("meritReminderTime");
+  const clearMeritBtn = el("clearMerit");
+  const meritOverlay = el("meritOverlay");
+  const meritBody = el("meritBody");
+  const meritCloseBtn = el("meritCloseBtn");
   const installBtn = el("installBtn");
   const bgCreditEl = el("bgCredit");
   const bgLayers = [el("bgLayerA"), el("bgLayerB")];
@@ -681,6 +700,211 @@
     });
   }
 
+  // ---- merit pool (บ่อบุญ) ----
+  function loadMeritLog() {
+    try {
+      const raw = localStorage.getItem(MERIT_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveMeritLog() {
+    localStorage.setItem(MERIT_KEY, JSON.stringify(meritLog.slice(0, 500)));
+  }
+
+  function isSameDay(t1, t2) {
+    return new Date(t1).toDateString() === new Date(t2).toDateString();
+  }
+
+  function getTodayMeritEntries() {
+    const now = Date.now();
+    return meritLog.filter((e) => isSameDay(e.t, now));
+  }
+
+  function addMeritEntry(label, points, source) {
+    const entry = { t: Date.now(), label: label || "บุญ", points: Math.max(0, Math.round(points) || 0), source: source || "manual" };
+    meritLog.unshift(entry);
+    meritLog = meritLog.slice(0, 500);
+    saveMeritLog();
+    renderMeritPanel();
+    return entry;
+  }
+
+  function renderMeritPanel() {
+    const today = getTodayMeritEntries();
+    const total = today.reduce((sum, e) => sum + e.points, 0);
+    meritTotalEl.textContent = `${total} คะแนน`;
+
+    meritListEl.innerHTML = "";
+    if (!today.length) {
+      const li = document.createElement("li");
+      li.className = "log-empty";
+      li.textContent = "วันนี้ยังไม่มีบุญสะสม";
+      meritListEl.appendChild(li);
+      return;
+    }
+    today.forEach((entry) => {
+      const li = document.createElement("li");
+      const row = document.createElement("div");
+      row.className = "log-row";
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = entry.label;
+      const ptsSpan = document.createElement("span");
+      ptsSpan.textContent = `+${entry.points}`;
+      row.appendChild(labelSpan);
+      row.appendChild(ptsSpan);
+      li.appendChild(row);
+      meritListEl.appendChild(li);
+    });
+  }
+
+  function getMeritGroupedToday() {
+    const groups = {};
+    const order = [];
+    getTodayMeritEntries().forEach((e) => {
+      if (!groups[e.label]) {
+        groups[e.label] = { count: 0, points: 0 };
+        order.push(e.label);
+      }
+      groups[e.label].count += 1;
+      groups[e.label].points += e.points;
+    });
+    return { groups, order };
+  }
+
+  function buildMeritSummaryText() {
+    const { groups, order } = getMeritGroupedToday();
+    if (!order.length) {
+      return "วันนี้ยังไม่มีบุญที่บันทึกไว้เลย ลองทบทวนดูว่าวันนี้ได้ทำความดีอะไรบ้าง";
+    }
+    const total = order.reduce((sum, label) => sum + groups[label].points, 0);
+    const parts = order.map((label) => {
+      const g = groups[label];
+      return g.count > 1 ? `${label} ${g.count} ครั้ง รวม ${g.points} คะแนน` : `${label} ${g.points} คะแนน`;
+    });
+    return `วันนี้คุณได้สร้างบุญไว้ดังนี้ ${parts.join(", ")} รวมคะแนนบ่อบุญทั้งหมด ${total} คะแนน`;
+  }
+
+  function getNextMeritTriggerTimestamp(fromMs) {
+    const from = new Date(fromMs);
+    const time = settings.meritReminderTime || "21:00";
+    const cand = dateAt(from, time);
+    if (cand.getTime() > fromMs) return cand.getTime();
+    const tomorrow = new Date(from);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return dateAt(tomorrow, time).getTime();
+  }
+
+  function scheduleMeritReminder() {
+    clearTimeout(meritReminderTimerHandle);
+    if (!settings.meritReminderEnabled) return;
+    const next = getNextMeritTriggerTimestamp(Date.now());
+    meritReminderTimerHandle = setTimeout(triggerMeritReminder, Math.max(0, next - Date.now()));
+  }
+
+  function triggerMeritReminder() {
+    const summary = buildMeritSummaryText();
+    playSound("chime", settings.volume);
+    setTimeout(() => {
+      openMeritOverlay(summary);
+      speakMessage(summary);
+    }, bellDecayMs("chime"));
+    scheduleMeritReminder();
+  }
+
+  // The Web Speech API has a single sequential queue - there is no way to make
+  // two utterances truly overlap into a "many voices at once" sound. This
+  // speaks the line twice back-to-back with a shifted pitch on the second
+  // pass as the closest practical approximation of a group response.
+  function speakGroupBlessing(text) {
+    if (!settings.ttsEnabled || !ttsSupported) return;
+    const originalPitch = settings.ttsPitch;
+    speakMessage(text, () => {
+      settings.ttsPitch = Math.max(0, Math.min(2, originalPitch - 0.2));
+      speakMessage(text, () => {
+        settings.ttsPitch = originalPitch;
+      });
+    });
+  }
+
+  function openMeritOverlay(summaryText) {
+    meritPhase = "summary";
+    meritSummaryText = summaryText;
+    meritOverlay.classList.add("open");
+    renderMeritOverlay();
+  }
+
+  function closeMeritOverlay() {
+    meritOverlay.classList.remove("open");
+    meritPhase = null;
+  }
+
+  function renderMeritOverlay() {
+    meritBody.innerHTML = "";
+    if (meritPhase === "summary") {
+      const eyebrow = document.createElement("p");
+      eyebrow.className = "checkin-eyebrow";
+      eyebrow.textContent = "🙏 ถึงเวลาอนุโมทนาบุญ";
+      const msg = document.createElement("p");
+      msg.className = "checkin-message";
+      msg.textContent = meritSummaryText;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "primary-btn checkin-primary";
+      btn.textContent = "อธิษฐานบุญ";
+      btn.addEventListener("click", () => {
+        meritPhase = "blessing";
+        renderMeritOverlay();
+        speakGroupBlessing("ขออนุโมทนาบุญกับทุกท่าน สาธุ สาธุ สาธุ");
+      });
+      meritBody.appendChild(eyebrow);
+      meritBody.appendChild(msg);
+      meritBody.appendChild(btn);
+    } else if (meritPhase === "blessing") {
+      const done = document.createElement("p");
+      done.className = "checkin-done";
+      done.textContent = "ขออนุโมทนาบุญกับทุกท่าน 🙏\nสาธุ สาธุ สาธุ";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "primary-btn checkin-primary";
+      btn.textContent = "ปิด";
+      btn.addEventListener("click", closeMeritOverlay);
+      meritBody.appendChild(done);
+      meritBody.appendChild(btn);
+    }
+  }
+
+  addMeritBtn.addEventListener("click", () => {
+    const label = newMeritLabelInput.value.trim();
+    const points = Number(newMeritPointsInput.value) || 0;
+    if (!label || points <= 0) return;
+    addMeritEntry(label, points, "manual");
+    newMeritLabelInput.value = "";
+    newMeritPointsInput.value = 10;
+  });
+
+  meritReminderEnabledInput.addEventListener("change", () => {
+    settings.meritReminderEnabled = meritReminderEnabledInput.checked;
+    saveSettings();
+    scheduleMeritReminder();
+  });
+
+  meritReminderTimeInput.addEventListener("change", () => {
+    settings.meritReminderTime = meritReminderTimeInput.value || "21:00";
+    saveSettings();
+    scheduleMeritReminder();
+  });
+
+  clearMeritBtn.addEventListener("click", () => {
+    meritLog = [];
+    saveMeritLog();
+    renderMeritPanel();
+  });
+
+  meritCloseBtn.addEventListener("click", closeMeritOverlay);
+
   // ---- emotion check-in ----
   function buildOptionGrid(list, onPick) {
     const grid = document.createElement("div");
@@ -807,6 +1031,7 @@
       btn.className = "primary-btn checkin-primary";
       btn.textContent = "ฉันมีสติ";
       btn.addEventListener("click", () => {
+        if (!checkinIsTest) addMeritEntry("ฝึกมีสติ", MINDFUL_MERIT_POINTS, "mindfulness");
         checkinPhase = "after";
         renderCheckin();
       });
@@ -890,7 +1115,9 @@
 
   checkinCloseBtn.addEventListener("click", closeCheckin);
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && checkinOverlay.classList.contains("open")) closeCheckin();
+    if (e.key !== "Escape") return;
+    if (checkinOverlay.classList.contains("open")) closeCheckin();
+    if (meritOverlay.classList.contains("open")) closeMeritOverlay();
   });
 
   // ---- background photo ----
@@ -1194,6 +1421,11 @@
       loadVoices();
       speechSynthesis.onvoiceschanged = loadVoices;
     }
+
+    meritReminderEnabledInput.checked = settings.meritReminderEnabled;
+    meritReminderTimeInput.value = settings.meritReminderTime;
+    renderMeritPanel();
+    scheduleMeritReminder();
 
     initModeUI();
     renderFixedTimes();

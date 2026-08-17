@@ -518,6 +518,34 @@ button { font-family: inherit; cursor: pointer; }
   border-top: 1px solid var(--card-border);
 }
 
+.merit-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.add-merit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 0;
+}
+.add-merit-row input[type="text"] {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+}
+.add-merit-row .field-row { align-items: flex-end; gap: 10px; }
+.add-merit-row .inline-input { flex: 1; }
+.add-merit-row .inline-input input { width: 100%; }
+.add-merit-row .ghost-btn { flex-shrink: 0; }
+
 .checkin-toggle {
   margin-bottom: 14px;
 }
