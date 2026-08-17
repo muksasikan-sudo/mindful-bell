@@ -34,6 +34,8 @@
     chime: { base: 587.3, decay: 2.6, partials: [1, 2.0, 3.01, 4.2], gain: [1, 0.5, 0.3, 0.15] },
   };
 
+  const SESSION_INTRO = "ขอเรียนเชิญทุกท่านมาสร้างบุญ ฝึกทบทวนธรรมเพิ่มไปพร้อมๆกันค่ะ";
+
   const defaults = {
     mode: "interval",
     intervalMinutes: 30,
@@ -592,8 +594,8 @@
     ringMessageEl.hidden = false;
   }
 
-  function bellDecayMs() {
-    const preset = SOUND_PRESETS[settings.sound] || SOUND_PRESETS.tibetan;
+  function bellDecayMs(sound) {
+    const preset = SOUND_PRESETS[sound] || SOUND_PRESETS.tibetan;
     return preset.decay * 1000 + 300;
   }
 
@@ -603,12 +605,15 @@
     showRingMessage(msg);
     const entry = addLogEntry(new Date(), msg);
     sendNotification(msg);
-    playSound(settings.sound, settings.volume);
-    setTimeout(() => {
-      if (settings.checkinEnabled) {
-        openCheckin(msg, { isTest: false, logEntry: entry });
-      }
-    }, bellDecayMs());
+
+    speakMessage(SESSION_INTRO, () => {
+      playSound("chime", settings.volume);
+      setTimeout(() => {
+        if (settings.checkinEnabled) {
+          openCheckin(msg, { isTest: false, logEntry: entry });
+        }
+      }, bellDecayMs("chime"));
+    });
   }
 
   function start() {
@@ -1256,12 +1261,15 @@
     const msg = pickNextMessage();
     changeBackground();
     showRingMessage(msg);
-    playSound(settings.sound, settings.volume);
-    setTimeout(() => {
-      if (settings.checkinEnabled) {
-        openCheckin(msg, { isTest: true, logEntry: null });
-      }
-    }, bellDecayMs());
+
+    speakMessage(SESSION_INTRO, () => {
+      playSound("chime", settings.volume);
+      setTimeout(() => {
+        if (settings.checkinEnabled) {
+          openCheckin(msg, { isTest: true, logEntry: null });
+        }
+      }, bellDecayMs("chime"));
+    });
   });
 
   // install prompt
