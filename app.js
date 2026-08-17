@@ -99,10 +99,6 @@
     { key: "เดิน", emoji: "🚶" },
   ];
 
-  const VOICE_PRESETS = {
-    "ชาย": { pitch: 0.85, rate: 0.92, gender: "male" },
-    "หญิง": { pitch: 0.98, rate: 0.78, gender: "female" },
-  };
 
   let settings = loadSettings();
   let log = loadLog();
@@ -161,13 +157,6 @@
   const checkinBody = el("checkinBody");
   const checkinCloseBtn = el("checkinCloseBtn");
   const ttsEnabledInput = el("ttsEnabled");
-  const ttsOptionsEl = el("ttsOptions");
-  const ttsVoiceSelect = el("ttsVoice");
-  const voicePresetGrid = el("voicePresetGrid");
-  const ttsPitchInput = el("ttsPitch");
-  const ttsRateInput = el("ttsRate");
-  const testVoiceBtn = el("testVoiceBtn");
-  const ttsHintEl = el("ttsHint");
   const permissionHint = el("permissionHint");
   const logList = el("logList");
   const clearLogBtn = el("clearLog");
@@ -342,61 +331,6 @@
   // ---- text-to-speech ----
   const ttsSupported = "speechSynthesis" in window;
 
-  function loadVoices() {
-    if (!ttsSupported) return;
-    const voices = speechSynthesis.getVoices();
-    if (voices.length) {
-      availableVoices = voices;
-      populateVoiceSelect();
-    }
-  }
-
-  function populateVoiceSelect() {
-    const thai = availableVoices.filter((v) => v.lang && v.lang.toLowerCase().startsWith("th"));
-    const others = availableVoices.filter((v) => !(v.lang && v.lang.toLowerCase().startsWith("th")));
-    const ordered = [...thai, ...others];
-
-    ttsVoiceSelect.innerHTML = "";
-    const defaultOpt = document.createElement("option");
-    defaultOpt.value = "";
-    defaultOpt.textContent = "ค่าเริ่มต้นของเบราว์เซอร์";
-    ttsVoiceSelect.appendChild(defaultOpt);
-
-    ordered.forEach((v) => {
-      const opt = document.createElement("option");
-      opt.value = v.voiceURI;
-      opt.textContent = `${v.name} (${v.lang})`;
-      ttsVoiceSelect.appendChild(opt);
-    });
-
-    let autoPickedNonFemale = false;
-    if (!settings.ttsVoiceURI && !autoVoicePicked && ordered.length) {
-      autoVoicePicked = true;
-      const femaleVoice = findVoiceForGender("female");
-      if (femaleVoice) {
-        settings.ttsVoiceURI = femaleVoice.voiceURI;
-        saveSettings();
-        document.querySelectorAll(".voice-preset").forEach((b) => b.classList.toggle("active", b.dataset.preset === "หญิง"));
-        autoPickedNonFemale = voiceGenderConfidence(femaleVoice, "female") !== "confident";
-      }
-    }
-
-    const hasMatch = ordered.some((v) => v.voiceURI === settings.ttsVoiceURI);
-    ttsVoiceSelect.value = hasMatch ? settings.ttsVoiceURI : "";
-
-    if (!thai.length) {
-      ttsHintEl.textContent = "ไม่พบเสียงพูดภาษาไทยในเครื่องนี้ การอ่านอาจไม่ชัดหรือไม่ทำงาน ลองติดตั้งภาษาไทยเพิ่มในตั้งค่าเบราว์เซอร์หรืออุปกรณ์";
-      ttsHintEl.className = "hint warn";
-    } else if (autoPickedNonFemale) {
-      const picked = availableVoices.find((v) => v.voiceURI === settings.ttsVoiceURI);
-      ttsHintEl.textContent = `ไม่พบเสียงผู้หญิงภาษาไทยในเครื่องนี้ กำลังใช้เสียง "${picked ? picked.name : ""}" แทน (อาจฟังดูไม่ใช่เสียงผู้หญิง) ลองดูช่องเลือกเสียงพูดด้านบนว่ามีตัวเลือกอื่นไหม`;
-      ttsHintEl.className = "hint warn";
-    } else {
-      ttsHintEl.textContent = "";
-      ttsHintEl.className = "hint";
-    }
-  }
-
   // The Web Speech API exposes no gender field on a voice, so this falls back to
   // matching known voice names by platform (Windows/macOS/iOS/Android/Chrome OS).
   const FEMALE_NAME_HINTS = ["premwadee", "achara", "kanya", "narisa", "female", "หญิง", "woman", "zira", "samantha", "victoria", "susan", "karen", "moira", "tessa", "catherine", "kate", "linda", "google ไทย หญิง"];
@@ -415,13 +349,19 @@
     return notOpposite[0] || pool[0] || null;
   }
 
-  function voiceGenderConfidence(voice, gender) {
-    if (!voice) return "none";
-    const hints = gender === "female" ? FEMALE_NAME_HINTS : MALE_NAME_HINTS;
-    const oppositeHints = gender === "female" ? MALE_NAME_HINTS : FEMALE_NAME_HINTS;
-    if (hints.some((h) => new RegExp(h, "i").test(voice.name))) return "confident";
-    if (oppositeHints.some((h) => new RegExp(h, "i").test(voice.name))) return "opposite";
-    return "unknown";
+  function loadVoices() {
+    if (!ttsSupported) return;
+    const voices = speechSynthesis.getVoices();
+    if (!voices.length) return;
+    availableVoices = voices;
+    if (!settings.ttsVoiceURI && !autoVoicePicked) {
+      autoVoicePicked = true;
+      const femaleVoice = findVoiceForGender("female");
+      if (femaleVoice) {
+        settings.ttsVoiceURI = femaleVoice.voiceURI;
+        saveSettings();
+      }
+    }
   }
 
   function primeSpeech() {
@@ -472,10 +412,6 @@
     } catch (e) {
       if (onEnd) onEnd();
     }
-  }
-
-  function updateTtsOptionsVisibility() {
-    ttsOptionsEl.style.display = settings.ttsEnabled ? "" : "none";
   }
 
   // ---- wake lock ----
@@ -1189,59 +1125,7 @@
 
   ttsEnabledInput.addEventListener("change", () => {
     settings.ttsEnabled = ttsEnabledInput.checked;
-    updateTtsOptionsVisibility();
     saveSettings();
-  });
-
-  ttsVoiceSelect.addEventListener("change", () => {
-    settings.ttsVoiceURI = ttsVoiceSelect.value;
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.remove("active"));
-    saveSettings();
-  });
-
-  ttsPitchInput.addEventListener("input", () => {
-    settings.ttsPitch = Number(ttsPitchInput.value) / 100;
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.remove("active"));
-    saveSettings();
-  });
-
-  ttsRateInput.addEventListener("input", () => {
-    settings.ttsRate = Number(ttsRateInput.value) / 100;
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.remove("active"));
-    saveSettings();
-  });
-
-  voicePresetGrid.addEventListener("click", (e) => {
-    const btn = e.target.closest(".voice-preset");
-    if (!btn) return;
-    const preset = VOICE_PRESETS[btn.dataset.preset];
-    if (!preset) return;
-    settings.ttsPitch = preset.pitch;
-    settings.ttsRate = preset.rate;
-    const matched = findVoiceForGender(preset.gender);
-    if (matched) {
-      settings.ttsVoiceURI = matched.voiceURI;
-      ttsVoiceSelect.value = matched.voiceURI;
-    }
-    ttsPitchInput.value = Math.round(preset.pitch * 100);
-    ttsRateInput.value = Math.round(preset.rate * 100);
-    document.querySelectorAll(".voice-preset").forEach((b) => b.classList.toggle("active", b === btn));
-    saveSettings();
-
-    if (matched && voiceGenderConfidence(matched, preset.gender) !== "confident") {
-      ttsHintEl.textContent = `ไม่พบเสียงที่ตรงกับ "${btn.dataset.preset}" ในเครื่องนี้ กำลังใช้เสียง "${matched.name}" แทน`;
-      ttsHintEl.className = "hint warn";
-    } else if (matched) {
-      ttsHintEl.textContent = "";
-      ttsHintEl.className = "hint";
-    }
-    ensureAudioContext();
-    speakMessage(`นี่คือตัวอย่างเสียง${btn.dataset.preset}`);
-  });
-
-  testVoiceBtn.addEventListener("click", () => {
-    ensureAudioContext();
-    speakMessage(pickNextMessage());
   });
 
   clearLogBtn.addEventListener("click", () => {
@@ -1306,16 +1190,10 @@
     document.querySelectorAll(".sound-choice").forEach((b) => b.classList.toggle("active", b.dataset.sound === settings.sound));
 
     ttsEnabledInput.checked = settings.ttsEnabled;
-    ttsPitchInput.value = Math.round(settings.ttsPitch * 100);
-    ttsRateInput.value = Math.round(settings.ttsRate * 100);
-    updateTtsOptionsVisibility();
     if (!ttsSupported) {
       settings.ttsEnabled = false;
       ttsEnabledInput.checked = false;
       ttsEnabledInput.disabled = true;
-      ttsHintEl.textContent = "เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง";
-      ttsHintEl.className = "hint warn";
-      updateTtsOptionsVisibility();
     } else {
       loadVoices();
       speechSynthesis.onvoiceschanged = loadVoices;
