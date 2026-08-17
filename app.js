@@ -445,7 +445,14 @@
         // Safety net: some browsers occasionally never fire onend.
         setTimeout(finish, Math.min(15000, Math.max(2500, text.length * 90)));
       }
-      speechSynthesis.speak(utter);
+      // Calling speak() synchronously right after cancel() can silently drop
+      // the utterance in Chrome/Edge after the engine has been used a few
+      // times in the same session. Deferring a tick, plus a pause/resume
+      // nudge, works around that stuck-queue bug.
+      setTimeout(() => {
+        speechSynthesis.resume();
+        speechSynthesis.speak(utter);
+      }, 60);
     } catch (e) {
       if (onEnd) onEnd();
     }
@@ -1210,13 +1217,11 @@
       ttsHintEl.className = "hint";
     }
     ensureAudioContext();
-    primeSpeech();
     speakMessage(`นี่คือตัวอย่างเสียง${btn.dataset.preset}`);
   });
 
   testVoiceBtn.addEventListener("click", () => {
     ensureAudioContext();
-    primeSpeech();
     speakMessage(pickNextMessage());
   });
 
