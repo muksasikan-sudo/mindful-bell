@@ -100,10 +100,6 @@
   const VOICE_PRESETS = {
     "ชาย": { pitch: 0.85, rate: 0.92, gender: "male" },
     "หญิง": { pitch: 0.98, rate: 0.78, gender: "female" },
-    "พระ": { pitch: 0.7, rate: 0.82, gender: "male" },
-    "แม่ชี": { pitch: 0.95, rate: 0.85, gender: "female" },
-    "เด็กชาย": { pitch: 1.3, rate: 1.0, gender: "male" },
-    "เด็กหญิง": { pitch: 1.4, rate: 1.0, gender: "female" },
   };
 
   let settings = loadSettings();
