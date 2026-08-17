@@ -109,8 +109,8 @@ body {
     font-size: 26px;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 0, 0, 0.4);
   }
-  .bg-quote-left { left: 24px; text-align: left; }
-  .bg-quote-right { right: 24px; text-align: right; margin-bottom: 0; }
+  .bg-quote-left { left: 24px; }
+  .bg-quote-right { right: 24px; margin-bottom: 0; }
 }
 
 .app {
