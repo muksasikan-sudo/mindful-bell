@@ -72,6 +72,13 @@
     { key: "เฉยๆ", emoji: "😐" },
   ];
 
+  const POSTURES = [
+    { key: "นั่ง", emoji: "🧘" },
+    { key: "นอน", emoji: "🛌" },
+    { key: "ยืน", emoji: "🧍" },
+    { key: "เดิน", emoji: "🚶" },
+  ];
+
   const VOICE_PRESETS = {
     "ชาย": { pitch: 0.85, rate: 0.92, gender: "male" },
     "หญิง": { pitch: 0.98, rate: 0.78, gender: "female" },
@@ -92,6 +99,7 @@
   let checkinBeforeEmotion = null;
   let checkinAfterEmotion = null;
   let checkinIntensity = null;
+  let checkinPosture = null;
   let checkinMessageText = "";
 
   let running = false;
@@ -656,7 +664,7 @@
 
   // ---- log ----
   function addLogEntry(date, msg) {
-    const entry = { t: date.getTime(), msg: msg || "", before: null, after: null, intensity: null };
+    const entry = { t: date.getTime(), msg: msg || "", before: null, after: null, intensity: null, posture: null };
     log.unshift(entry);
     log = log.slice(0, 30);
     saveLog();
@@ -701,6 +709,7 @@
         emoP.className = "log-emotions";
         let text = `อารมณ์ก่อน: ${entry.before || "ข้าม"} · หลัง: ${entry.after || "ข้าม"}`;
         if (entry.intensity) text += ` (${entry.intensity})`;
+        if (entry.posture) text += ` · อิริยาบถ: ${entry.posture}`;
         emoP.textContent = text;
         li.appendChild(emoP);
       }
@@ -709,10 +718,10 @@
   }
 
   // ---- emotion check-in ----
-  function buildEmotionGrid(onPick) {
+  function buildOptionGrid(list, onPick) {
     const grid = document.createElement("div");
     grid.className = "emotion-grid";
-    EMOTIONS.forEach((e) => {
+    list.forEach((e) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "emotion-btn";
@@ -738,6 +747,7 @@
     checkinBeforeEmotion = null;
     checkinAfterEmotion = null;
     checkinIntensity = null;
+    checkinPosture = null;
     checkinMessageText = messageText;
     checkinOverlay.classList.add("open");
     renderCheckin();
@@ -748,6 +758,7 @@
     checkinLogEntry.before = checkinBeforeEmotion;
     checkinLogEntry.after = checkinAfterEmotion;
     checkinLogEntry.intensity = checkinIntensity;
+    checkinLogEntry.posture = checkinPosture;
     saveLog();
     renderLog();
   }
@@ -759,7 +770,7 @@
   }
 
   function closeCheckin() {
-    if (checkinPhase && checkinPhase !== "done" && (checkinBeforeEmotion || checkinAfterEmotion)) {
+    if (checkinPhase && checkinPhase !== "done" && (checkinBeforeEmotion || checkinAfterEmotion || checkinPosture)) {
       persistCheckinEmotions();
     }
     checkinOverlay.classList.remove("open");
@@ -774,12 +785,34 @@
       eyebrow.textContent = "🔔 ระฆังดังแล้ว";
       const q = document.createElement("p");
       q.className = "checkin-question";
-      q.textContent = "ตอนนี้อารมณ์เป็นอย่างไร?";
+      q.textContent = "ตอนนี้อารมณ์ของคุณเป็นอย่างไร?";
       checkinBody.appendChild(eyebrow);
       checkinBody.appendChild(q);
       checkinBody.appendChild(
-        buildEmotionGrid((key) => {
+        buildOptionGrid(EMOTIONS, (key) => {
           checkinBeforeEmotion = key;
+          checkinPhase = "posture";
+          renderCheckin();
+        })
+      );
+      const skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "link-btn checkin-skip";
+      skip.textContent = "ข้ามขั้นตอนนี้";
+      skip.addEventListener("click", () => {
+        checkinPhase = "posture";
+        renderCheckin();
+      });
+      checkinBody.appendChild(skip);
+      speakMessage(q.textContent);
+    } else if (checkinPhase === "posture") {
+      const q = document.createElement("p");
+      q.className = "checkin-question";
+      q.textContent = "ตอนนี้คุณอยู่ในอิริยาบถแบบใด?";
+      checkinBody.appendChild(q);
+      checkinBody.appendChild(
+        buildOptionGrid(POSTURES, (key) => {
+          checkinPosture = key;
           checkinPhase = "message";
           renderCheckin();
         })
@@ -793,6 +826,7 @@
         renderCheckin();
       });
       checkinBody.appendChild(skip);
+      speakMessage(q.textContent);
     } else if (checkinPhase === "message") {
       if (checkinBeforeEmotion) {
         const picked = document.createElement("p");
@@ -823,7 +857,7 @@
       checkinBody.appendChild(q);
       checkinBody.appendChild(hint);
       checkinBody.appendChild(
-        buildEmotionGrid((key) => {
+        buildOptionGrid(EMOTIONS, (key) => {
           checkinAfterEmotion = key;
           if (checkinBeforeEmotion && key === checkinBeforeEmotion) {
             checkinPhase = "intensity";
