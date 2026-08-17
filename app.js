@@ -377,8 +377,11 @@
     }
   }
 
-  function speakMessage(text) {
-    if (!settings.ttsEnabled || !ttsSupported || !text) return;
+  function speakMessage(text, onEnd) {
+    if (!settings.ttsEnabled || !ttsSupported || !text) {
+      if (onEnd) onEnd();
+      return;
+    }
     try {
       speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
@@ -390,9 +393,21 @@
         const v = availableVoices.find((v) => v.voiceURI === settings.ttsVoiceURI);
         if (v) utter.voice = v;
       }
+      if (onEnd) {
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          onEnd();
+        };
+        utter.onend = finish;
+        utter.onerror = finish;
+        // Safety net: some browsers occasionally never fire onend.
+        setTimeout(finish, Math.min(15000, Math.max(2500, text.length * 90)));
+      }
       speechSynthesis.speak(utter);
     } catch (e) {
-      /* ignore */
+      if (onEnd) onEnd();
     }
   }
 
@@ -518,15 +533,17 @@
 
   function ringBell() {
     const msg = pickNextMessage();
-    playSound(settings.sound, settings.volume);
     changeBackground();
     showRingMessage(msg);
-    setTimeout(() => speakMessage(msg), 1100);
     const entry = addLogEntry(new Date(), msg);
     sendNotification(msg);
-    if (settings.checkinEnabled) {
-      openCheckin(msg, { isTest: false, logEntry: entry });
-    }
+
+    speakMessage(msg, () => {
+      playSound(settings.sound, settings.volume);
+      if (settings.checkinEnabled) {
+        openCheckin(msg, { isTest: false, logEntry: entry });
+      }
+    });
   }
 
   function start() {
@@ -1139,13 +1156,15 @@
   testBtn.addEventListener("click", () => {
     ensureAudioContext();
     const msg = pickNextMessage();
-    playSound(settings.sound, settings.volume);
     changeBackground();
     showRingMessage(msg);
-    setTimeout(() => speakMessage(msg), 1100);
-    if (settings.checkinEnabled) {
-      openCheckin(msg, { isTest: true, logEntry: null });
-    }
+
+    speakMessage(msg, () => {
+      playSound(settings.sound, settings.volume);
+      if (settings.checkinEnabled) {
+        openCheckin(msg, { isTest: true, logEntry: null });
+      }
+    });
   });
 
   // install prompt
