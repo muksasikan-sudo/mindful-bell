@@ -168,6 +168,7 @@
   const permissionHint = el("permissionHint");
   const logList = el("logList");
   const clearLogBtn = el("clearLog");
+  const toggleLogBtn = el("toggleLogBtn");
   const meritTotalEl = el("meritTotal");
   const meritListEl = el("meritList");
   const newMeritLabelInput = el("newMeritLabel");
@@ -1346,6 +1347,12 @@
     log = [];
     saveLog();
     renderLog();
+  });
+
+  toggleLogBtn.addEventListener("click", () => {
+    const nowHidden = !logList.hidden;
+    logList.hidden = nowHidden;
+    toggleLogBtn.textContent = nowHidden ? "แสดงประวัติ" : "ซ่อนประวัติ";
   });
 
   toggleBtn.addEventListener("click", () => {

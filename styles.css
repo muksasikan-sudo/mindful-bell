@@ -181,6 +181,12 @@ main { display: flex; flex-direction: column; gap: 16px; }
 }
 .panel-header-row h2 { margin: 0; }
 
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* Ring dial */
 .ring-dial {
   position: relative;

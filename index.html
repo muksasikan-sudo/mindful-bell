@@ -215,9 +215,12 @@
     <section class="panel">
       <div class="panel-header-row">
         <h2>ประวัติการแจ้งเตือน</h2>
-        <button id="clearLog" class="link-btn">ล้างประวัติ</button>
+        <div class="panel-header-actions">
+          <button id="toggleLogBtn" class="link-btn">แสดงประวัติ</button>
+          <button id="clearLog" class="link-btn">ล้างประวัติ</button>
+        </div>
       </div>
-      <ul class="log-list" id="logList">
+      <ul class="log-list" id="logList" hidden>
         <li class="log-empty">ยังไม่มีประวัติ</li>
       </ul>
     </section>
