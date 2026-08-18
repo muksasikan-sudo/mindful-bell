@@ -563,7 +563,7 @@ button { font-family: inherit; cursor: pointer; }
 .add-merit-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin: 4px 0 0;
 }
 .add-merit-row input[type="text"] {
@@ -576,10 +576,44 @@ button { font-family: inherit; cursor: pointer; }
   font-family: inherit;
   width: 100%;
 }
-.add-merit-row .field-row { align-items: flex-end; gap: 10px; }
-.add-merit-row .inline-input { flex: 1; }
-.add-merit-row .inline-input input { width: 100%; }
-.add-merit-row .ghost-btn { flex-shrink: 0; }
+
+.merit-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.merit-cat-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 10px 10px;
+  color: var(--text-main);
+  text-align: left;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.merit-cat-choice:hover,
+.merit-cat-choice:active {
+  border-color: var(--accent-strong);
+  background: rgba(140, 107, 255, 0.16);
+  transform: translateY(-1px);
+}
+.merit-cat-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.merit-cat-desc {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+.merit-cat-emoji { font-size: 14px; }
 
 .checkin-toggle {
   margin-bottom: 14px;

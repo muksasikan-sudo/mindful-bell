@@ -5,8 +5,22 @@
   const LOG_KEY = "mindfulBell.log.v1";
   const BG_KEY = "mindfulBell.bg.v1";
   const MERIT_KEY = "mindfulBell.merit.v1";
-  const MINDFUL_MERIT_POINTS = 5;
+  const MINDFUL_MERIT_CATEGORY = "ภาวนามัย";
   let ringPathLength = 0;
+
+  // The 10 บุญกิริยาวัตถุ (bases of meritorious action).
+  const MERIT_CATEGORIES = [
+    { key: "ทานมัย", desc: "ให้และแบ่งปัน", emoji: "🎁" },
+    { key: "ศีลมัย", desc: "รักษาศีล งดเว้นชั่ว", emoji: "🛡️" },
+    { key: "ภาวนามัย", desc: "ฝึกจิตให้สงบและมีปัญญา", emoji: "🧘" },
+    { key: "อปจายนมัย", desc: "อ่อนน้อมถ่อมตน", emoji: "🙇" },
+    { key: "เวยยาวัจจมัย", desc: "ช่วยเหลือขวนขวายกิจที่ดี", emoji: "🤝" },
+    { key: "ปัตติทานมัย", desc: "อุทิศส่วนบุญให้ผู้อื่น", emoji: "🎗️" },
+    { key: "ปัตตานุโมทนามัย", desc: "ยินดีในความดีของผู้อื่น", emoji: "🙌" },
+    { key: "ธัมมัสสวนมัย", desc: "ฟังธรรม", emoji: "👂" },
+    { key: "ธัมมเทสนามัย", desc: "แสดงหรือบอกเล่าธรรมะ", emoji: "📖" },
+    { key: "ทิฏฐุชุกัมม์", desc: "ปรับความเห็นให้ถูกต้อง", emoji: "🧭" },
+  ];
 
   // Free-licensed photos from Wikimedia Commons (temples, Buddha statues, lotus flowers).
   const BACKGROUNDS = [
@@ -193,9 +207,8 @@
   const toggleLogBtn = el("toggleLogBtn");
   const meritTotalEl = el("meritTotal");
   const meritListEl = el("meritList");
-  const newMeritLabelInput = el("newMeritLabel");
-  const newMeritPointsInput = el("newMeritPoints");
-  const addMeritBtn = el("addMeritBtn");
+  const meritCatGrid = el("meritCatGrid");
+  const newMeritDetailInput = el("newMeritDetail");
   const meritReminderEnabledInput = el("meritReminderEnabled");
   const meritReminderTimeInput = el("meritReminderTime");
   const clearMeritBtn = el("clearMerit");
@@ -746,8 +759,8 @@
     return meritLog.filter((e) => isSameDay(e.t, now));
   }
 
-  function addMeritEntry(label, points, source) {
-    const entry = { t: Date.now(), label: label || "บุญ", points: Math.max(0, Math.round(points) || 0), source: source || "manual" };
+  function addMeritEntry(category, detail, source) {
+    const entry = { t: Date.now(), category: category || "ทานมัย", detail: detail || "", source: source || "manual" };
     meritLog.unshift(entry);
     meritLog = meritLog.slice(0, 500);
     saveMeritLog();
@@ -755,46 +768,55 @@
     return entry;
   }
 
+  function getMeritGroupedToday() {
+    const groups = {};
+    const order = [];
+    getTodayMeritEntries().forEach((e) => {
+      const cat = e.category || "ทานมัย";
+      if (!groups[cat]) {
+        groups[cat] = { count: 0, details: [] };
+        order.push(cat);
+      }
+      groups[cat].count += 1;
+      if (e.detail) groups[cat].details.push(e.detail);
+    });
+    return { groups, order };
+  }
+
   function renderMeritPanel() {
-    const today = getTodayMeritEntries();
-    const total = today.reduce((sum, e) => sum + e.points, 0);
-    meritTotalEl.textContent = `${total} คะแนน`;
+    const { groups, order } = getMeritGroupedToday();
+    const total = order.reduce((sum, cat) => sum + groups[cat].count, 0);
+    meritTotalEl.textContent = `${total} ครั้ง`;
 
     meritListEl.innerHTML = "";
-    if (!today.length) {
+    if (!order.length) {
       const li = document.createElement("li");
       li.className = "log-empty";
       li.textContent = "วันนี้ยังไม่มีบุญสะสม";
       meritListEl.appendChild(li);
       return;
     }
-    today.forEach((entry) => {
+    // Show in the canonical บุญกิริยาวัตถุ 10 order, only categories used today.
+    MERIT_CATEGORIES.filter((c) => groups[c.key]).forEach((c) => {
+      const g = groups[c.key];
       const li = document.createElement("li");
       const row = document.createElement("div");
       row.className = "log-row";
-      const labelSpan = document.createElement("span");
-      labelSpan.textContent = entry.label;
-      const ptsSpan = document.createElement("span");
-      ptsSpan.textContent = `+${entry.points}`;
-      row.appendChild(labelSpan);
-      row.appendChild(ptsSpan);
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = `${c.emoji} ${c.key}`;
+      const countSpan = document.createElement("span");
+      countSpan.textContent = `${g.count} ครั้ง`;
+      row.appendChild(nameSpan);
+      row.appendChild(countSpan);
       li.appendChild(row);
+      if (g.details.length) {
+        const detailP = document.createElement("p");
+        detailP.className = "log-msg";
+        detailP.textContent = g.details.join(" · ");
+        li.appendChild(detailP);
+      }
       meritListEl.appendChild(li);
     });
-  }
-
-  function getMeritGroupedToday() {
-    const groups = {};
-    const order = [];
-    getTodayMeritEntries().forEach((e) => {
-      if (!groups[e.label]) {
-        groups[e.label] = { count: 0, points: 0 };
-        order.push(e.label);
-      }
-      groups[e.label].count += 1;
-      groups[e.label].points += e.points;
-    });
-    return { groups, order };
   }
 
   function buildMeritSummaryText() {
@@ -802,12 +824,9 @@
     if (!order.length) {
       return "วันนี้ยังไม่มีบุญที่บันทึกไว้เลย ลองทบทวนดูว่าวันนี้ได้ทำความดีอะไรบ้าง";
     }
-    const total = order.reduce((sum, label) => sum + groups[label].points, 0);
-    const parts = order.map((label) => {
-      const g = groups[label];
-      return g.count > 1 ? `${label} ${g.count} ครั้ง รวม ${g.points} คะแนน` : `${label} ${g.points} คะแนน`;
-    });
-    return `วันนี้คุณได้สร้างบุญไว้ดังนี้ ${parts.join(", ")} รวมคะแนนเสบียงบุญทั้งหมด ${total} คะแนน`;
+    const total = order.reduce((sum, cat) => sum + groups[cat].count, 0);
+    const parts = MERIT_CATEGORIES.filter((c) => groups[c.key]).map((c) => `${c.key} ${groups[c.key].count} ครั้ง`);
+    return `วันนี้คุณได้สร้างบุญไว้ดังนี้ ${parts.join(", ")} รวมทั้งหมด ${total} ครั้ง`;
   }
 
   function getNextMeritTriggerTimestamp(fromMs) {
@@ -895,14 +914,32 @@
     }
   }
 
-  addMeritBtn.addEventListener("click", () => {
-    const label = newMeritLabelInput.value.trim();
-    const points = Number(newMeritPointsInput.value) || 0;
-    if (!label || points <= 0) return;
-    addMeritEntry(label, points, "manual");
-    newMeritLabelInput.value = "";
-    newMeritPointsInput.value = 10;
-  });
+  function renderMeritCatGrid() {
+    meritCatGrid.innerHTML = "";
+    MERIT_CATEGORIES.forEach((c) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "merit-cat-choice";
+      const nameEl = document.createElement("span");
+      nameEl.className = "merit-cat-name";
+      const emoji = document.createElement("span");
+      emoji.className = "merit-cat-emoji";
+      emoji.textContent = c.emoji;
+      nameEl.appendChild(emoji);
+      nameEl.appendChild(document.createTextNode(c.key));
+      const descEl = document.createElement("span");
+      descEl.className = "merit-cat-desc";
+      descEl.textContent = c.desc;
+      btn.appendChild(nameEl);
+      btn.appendChild(descEl);
+      btn.addEventListener("click", () => {
+        const detail = newMeritDetailInput.value.trim();
+        addMeritEntry(c.key, detail, "manual");
+        newMeritDetailInput.value = "";
+      });
+      meritCatGrid.appendChild(btn);
+    });
+  }
 
   meritReminderEnabledInput.addEventListener("change", () => {
     settings.meritReminderEnabled = meritReminderEnabledInput.checked;
@@ -1076,7 +1113,7 @@
       btn.className = "primary-btn checkin-primary";
       btn.textContent = "ฉันมีสติ";
       btn.addEventListener("click", () => {
-        if (!checkinIsTest) addMeritEntry("ฝึกมีสติ", MINDFUL_MERIT_POINTS, "mindfulness");
+        if (!checkinIsTest) addMeritEntry(MINDFUL_MERIT_CATEGORY, "ฝึกมีสติ", "mindfulness");
         checkinPhase = "after";
         renderCheckin();
       });
@@ -1472,6 +1509,7 @@
 
     meritReminderEnabledInput.checked = settings.meritReminderEnabled;
     meritReminderTimeInput.value = settings.meritReminderTime;
+    renderMeritCatGrid();
     renderMeritPanel();
     scheduleMeritReminder();
 
