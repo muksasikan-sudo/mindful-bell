@@ -708,7 +708,7 @@
     });
   }
 
-  // ---- merit pool (บ่อบุญ) ----
+  // ---- merit pool (เสบียงบุญ) ----
   function loadMeritLog() {
     try {
       const raw = localStorage.getItem(MERIT_KEY);
@@ -792,7 +792,7 @@
       const g = groups[label];
       return g.count > 1 ? `${label} ${g.count} ครั้ง รวม ${g.points} คะแนน` : `${label} ${g.points} คะแนน`;
     });
-    return `วันนี้คุณได้สร้างบุญไว้ดังนี้ ${parts.join(", ")} รวมคะแนนบ่อบุญทั้งหมด ${total} คะแนน`;
+    return `วันนี้คุณได้สร้างบุญไว้ดังนี้ ${parts.join(", ")} รวมคะแนนเสบียงบุญทั้งหมด ${total} คะแนน`;
   }
 
   function getNextMeritTriggerTimestamp(fromMs) {
