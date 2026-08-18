@@ -103,6 +103,13 @@
     { key: "เดิน", emoji: "🚶" },
   ];
 
+  const POSTURE_GUIDANCE = {
+    "ยืน": "รู้สึกตัวทั่วพร้อม ตั้งกายตรงมั่นคง รู้ว่ากำลังยืน ทรงตัวด้วยเท้าทั้งสองข้าง และลมหายใจเข้าออก",
+    "เดิน": "รู้สึกถึงการก้าวเท้า ขยับเท้า หรือน้ำหนักที่กระทบพื้น และลมหายใจเข้าออก",
+    "นั่ง": "รู้สึกถึงน้ำหนักตัวที่กดทับ และฐานที่ตั้งมั่นของร่างกาย และลมหายใจเข้าออก",
+    "นอน": "รู้สึกถึงการผ่อนคลาย การสัมผัสพื้นหรือที่นอน และลมหายใจเข้าออก",
+  };
+
 
   let settings = loadSettings();
   let log = loadLog();
@@ -980,7 +987,7 @@
       checkinBody.appendChild(
         buildOptionGrid(POSTURES, (key) => {
           checkinPosture = key;
-          checkinPhase = "before";
+          checkinPhase = "postureGuidance";
           renderCheckin();
         })
       );
@@ -993,7 +1000,31 @@
         renderCheckin();
       });
       checkinBody.appendChild(skip);
-      speakMessage(q.textContent);
+      speakMessage(q.textContent, () => speakMessage("นั่งหรือนอนหรือยืนหรือเดิน"));
+    } else if (checkinPhase === "postureGuidance") {
+      const picked = document.createElement("p");
+      picked.className = "checkin-picked";
+      picked.textContent = `คุณอยู่ในท่า: ${checkinPosture}`;
+      const msg = document.createElement("p");
+      msg.className = "checkin-message";
+      msg.textContent = POSTURE_GUIDANCE[checkinPosture] || "";
+      checkinBody.appendChild(picked);
+      checkinBody.appendChild(msg);
+
+      let advanced = false;
+      const advance = () => {
+        if (advanced) return;
+        advanced = true;
+        checkinPhase = "before";
+        renderCheckin();
+      };
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "primary-btn checkin-primary";
+      btn.textContent = "ต่อไป";
+      btn.addEventListener("click", advance);
+      checkinBody.appendChild(btn);
+      speakMessage(POSTURE_GUIDANCE[checkinPosture] || "", advance);
     } else if (checkinPhase === "before") {
       const q = document.createElement("p");
       q.className = "checkin-question";
