@@ -38,11 +38,11 @@
 
   const SESSION_INTRO = "ขอเรียนเชิญทุกท่านมาสร้างบุญ ฝึกทบทวนธรรมไปพร้อมๆกันครับ";
 
-  // Fixed reading tone - no longer user-adjustable. A rate much below ~0.9
-  // makes most system TTS voices (e.g. Windows' bundled Thai voice) sound
-  // choppy/broken rather than smooth, so this stays close to natural pace.
+  // Fixed reading tone - no longer user-adjustable. Slower-than-native rates
+  // make most system TTS voices (e.g. Windows' bundled Thai voice) garble or
+  // drop words rather than sound calm, so this stays at native pace.
   const TTS_PITCH = 1;
-  const TTS_RATE = 0.95;
+  const TTS_RATE = 1;
 
   const defaults = {
     mode: "interval",
@@ -107,12 +107,20 @@
     { key: "เดิน", emoji: "🚶" },
   ];
 
+  // Split into intro/detail so speech plays as two shorter utterances
+  // instead of one long one - long single utterances are where the Thai
+  // system voice tends to garble words. Wording is unchanged either way.
   const POSTURE_GUIDANCE = {
-    "ยืน": "ตอนนี้คุณอยู่ในท่ายืน ให้รู้สึกตัวทั่วพร้อม ตั้งกายตรงมั่นคง รู้ว่ากำลังยืน ทรงตัวด้วยเท้าทั้งสองข้าง และลมหายใจเข้าออก",
-    "เดิน": "ตอนนี้คุณอยู่ในท่าเดิน ให้รู้สึกถึงการก้าวเท้า ขยับเท้า หรือน้ำหนักที่กระทบพื้น และลมหายใจเข้าออก",
-    "นั่ง": "ตอนนี้คุณอยู่ในท่านั่ง ให้รู้สึกถึงน้ำหนักตัวที่กดทับ และฐานที่ตั้งมั่นของร่างกาย และลมหายใจเข้าออก",
-    "นอน": "ตอนนี้คุณอยู่ในท่านอน ให้รู้สึกถึงการผ่อนคลาย การสัมผัสพื้นหรือที่นอน และลมหายใจเข้าออก",
+    "ยืน": { intro: "ตอนนี้คุณอยู่ในท่ายืน", detail: "ให้รู้สึกตัวทั่วพร้อม ตั้งกายตรงมั่นคง รู้ว่ากำลังยืน ทรงตัวด้วยเท้าทั้งสองข้าง และลมหายใจเข้าออก" },
+    "เดิน": { intro: "ตอนนี้คุณอยู่ในท่าเดิน", detail: "ให้รู้สึกถึงการก้าวเท้า ขยับเท้า หรือน้ำหนักที่กระทบพื้น และลมหายใจเข้าออก" },
+    "นั่ง": { intro: "ตอนนี้คุณอยู่ในท่านั่ง", detail: "ให้รู้สึกถึงน้ำหนักตัวที่กดทับ และฐานที่ตั้งมั่นของร่างกาย และลมหายใจเข้าออก" },
+    "นอน": { intro: "ตอนนี้คุณอยู่ในท่านอน", detail: "ให้รู้สึกถึงการผ่อนคลาย การสัมผัสพื้นหรือที่นอน และลมหายใจเข้าออก" },
   };
+
+  function postureGuidanceText(key) {
+    const g = POSTURE_GUIDANCE[key];
+    return g ? `${g.intro} ${g.detail}` : "";
+  }
 
 
   let settings = loadSettings();
@@ -1004,7 +1012,7 @@
     } else if (checkinPhase === "postureGuidance") {
       const msg = document.createElement("p");
       msg.className = "checkin-message";
-      msg.textContent = POSTURE_GUIDANCE[checkinPosture] || "";
+      msg.textContent = postureGuidanceText(checkinPosture);
       checkinBody.appendChild(msg);
 
       let advanced = false;
@@ -1020,7 +1028,13 @@
       btn.textContent = "ต่อไป";
       btn.addEventListener("click", advance);
       checkinBody.appendChild(btn);
-      speakMessage(POSTURE_GUIDANCE[checkinPosture] || "", advance);
+
+      const guidance = POSTURE_GUIDANCE[checkinPosture];
+      if (guidance) {
+        speakMessage(guidance.intro, () => speakMessage(guidance.detail, advance));
+      } else {
+        advance();
+      }
     } else if (checkinPhase === "before") {
       const q = document.createElement("p");
       q.className = "checkin-question";
