@@ -38,6 +38,12 @@
 
   const SESSION_INTRO = "ขอเรียนเชิญทุกท่านมาสร้างบุญ ฝึกทบทวนธรรมไปพร้อมๆกันครับ";
 
+  // Fixed reading tone - no longer user-adjustable. A rate much below ~0.9
+  // makes most system TTS voices (e.g. Windows' bundled Thai voice) sound
+  // choppy/broken rather than smooth, so this stays close to natural pace.
+  const TTS_PITCH = 1;
+  const TTS_RATE = 0.95;
+
   const defaults = {
     mode: "interval",
     intervalMinutes: 30,
@@ -80,8 +86,6 @@
     checkinEnabled: true,
     ttsEnabled: true,
     ttsVoiceURI: "",
-    ttsPitch: 0.98,
-    ttsRate: 0.78,
     meritReminderEnabled: true,
     meritReminderTime: "21:00",
     runtime: { running: false, anchorTime: null },
@@ -400,7 +404,7 @@
     }
   }
 
-  function speakMessage(text, onEnd) {
+  function speakMessage(text, onEnd, pitchOverride) {
     if (!settings.ttsEnabled || !ttsSupported || !text) {
       if (onEnd) onEnd();
       return;
@@ -409,8 +413,8 @@
       speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "th-TH";
-      utter.pitch = Math.max(0, Math.min(2, settings.ttsPitch));
-      utter.rate = Math.max(0.1, Math.min(2, settings.ttsRate));
+      utter.pitch = typeof pitchOverride === "number" ? pitchOverride : TTS_PITCH;
+      utter.rate = TTS_RATE;
       utter.volume = Math.max(0, Math.min(1, settings.volume));
       if (settings.ttsVoiceURI) {
         const v = availableVoices.find((v) => v.voiceURI === settings.ttsVoiceURI);
@@ -828,12 +832,8 @@
   // pass as the closest practical approximation of a group response.
   function speakGroupBlessing(text) {
     if (!settings.ttsEnabled || !ttsSupported) return;
-    const originalPitch = settings.ttsPitch;
     speakMessage(text, () => {
-      settings.ttsPitch = Math.max(0, Math.min(2, originalPitch - 0.2));
-      speakMessage(text, () => {
-        settings.ttsPitch = originalPitch;
-      });
+      speakMessage(text, null, Math.max(0, Math.min(2, TTS_PITCH - 0.2)));
     });
   }
 
