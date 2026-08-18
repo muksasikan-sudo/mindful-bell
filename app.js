@@ -953,12 +953,12 @@
 
   function finishCheckin() {
     persistCheckinEmotions();
-    checkinPhase = "done";
-    renderCheckin();
+    checkinOverlay.classList.remove("open");
+    checkinPhase = null;
   }
 
   function closeCheckin() {
-    if (checkinPhase && checkinPhase !== "done" && (checkinBeforeEmotion || checkinAfterEmotion || checkinPosture)) {
+    if (checkinPhase && (checkinBeforeEmotion || checkinAfterEmotion || checkinPosture)) {
       persistCheckinEmotions();
     }
     checkinOverlay.classList.remove("open");
@@ -1099,17 +1099,6 @@
       skip.textContent = "ข้ามขั้นตอนนี้";
       skip.addEventListener("click", finishCheckin);
       checkinBody.appendChild(skip);
-    } else if (checkinPhase === "done") {
-      const done = document.createElement("p");
-      done.className = "checkin-done";
-      done.textContent = "ขอกราบสาธุ อนุโมทนาบุญกับทุกท่าน 🙏\nสาธุ สาธุ สาธุ";
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "primary-btn checkin-primary";
-      btn.textContent = "ปิด";
-      btn.addEventListener("click", closeCheckin);
-      checkinBody.appendChild(done);
-      checkinBody.appendChild(btn);
     }
   }
 
