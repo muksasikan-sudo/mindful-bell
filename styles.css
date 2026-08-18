@@ -213,14 +213,14 @@ main { display: flex; flex-direction: column; gap: 16px; }
 
 .ring-progress {
   fill: none;
-  stroke: var(--accent-strong);
+  stroke: #e8b64c;
   stroke-width: 6;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 326.7;
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 0.4s linear, stroke 0.3s ease;
-  filter: drop-shadow(0 0 6px rgba(140, 107, 255, 0.7));
+  filter: drop-shadow(0 0 6px rgba(232, 182, 76, 0.7));
 }
 
 .ring-center {
