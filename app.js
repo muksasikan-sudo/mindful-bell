@@ -932,7 +932,7 @@
     opts = opts || {};
     checkinIsTest = !!opts.isTest;
     checkinLogEntry = opts.logEntry || null;
-    checkinPhase = "before";
+    checkinPhase = "posture";
     checkinBeforeEmotion = null;
     checkinAfterEmotion = null;
     checkinIntensity = null;
@@ -968,19 +968,19 @@
 
   function renderCheckin() {
     checkinBody.innerHTML = "";
-    if (checkinPhase === "before") {
+    if (checkinPhase === "posture") {
       const eyebrow = document.createElement("p");
       eyebrow.className = "checkin-eyebrow";
       eyebrow.textContent = "🔔 ระฆังดังแล้ว";
       const q = document.createElement("p");
       q.className = "checkin-question";
-      q.textContent = "ตอนนี้อารมณ์ของคุณเป็นอย่างไร?";
+      q.textContent = "ตอนนี้คุณอยู่ในอิริยาบถแบบใด?";
       checkinBody.appendChild(eyebrow);
       checkinBody.appendChild(q);
       checkinBody.appendChild(
-        buildOptionGrid(EMOTIONS, (key) => {
-          checkinBeforeEmotion = key;
-          checkinPhase = "posture";
+        buildOptionGrid(POSTURES, (key) => {
+          checkinPosture = key;
+          checkinPhase = "before";
           renderCheckin();
         })
       );
@@ -989,19 +989,19 @@
       skip.className = "link-btn checkin-skip";
       skip.textContent = "ข้ามขั้นตอนนี้";
       skip.addEventListener("click", () => {
-        checkinPhase = "posture";
+        checkinPhase = "before";
         renderCheckin();
       });
       checkinBody.appendChild(skip);
       speakMessage(q.textContent);
-    } else if (checkinPhase === "posture") {
+    } else if (checkinPhase === "before") {
       const q = document.createElement("p");
       q.className = "checkin-question";
-      q.textContent = "ตอนนี้คุณอยู่ในอิริยาบถแบบใด?";
+      q.textContent = "ตอนนี้อารมณ์ของคุณเป็นอย่างไร?";
       checkinBody.appendChild(q);
       checkinBody.appendChild(
-        buildOptionGrid(POSTURES, (key) => {
-          checkinPosture = key;
+        buildOptionGrid(EMOTIONS, (key) => {
+          checkinBeforeEmotion = key;
           checkinPhase = "message";
           renderCheckin();
         })
