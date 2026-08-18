@@ -96,11 +96,11 @@
         <div class="field-row" id="activeWindowRow">
           <label class="field">
             <span>เริ่ม</span>
-            <input type="time" id="activeStart" value="08:00" />
+            <div class="time-picker" id="activeStart"></div>
           </label>
           <label class="field">
             <span>สิ้นสุด</span>
-            <input type="time" id="activeEnd" value="21:00" />
+            <div class="time-picker" id="activeEnd"></div>
           </label>
         </div>
       </div>
@@ -109,7 +109,7 @@
         <span class="field-label">เวลาที่จะให้แจ้งเตือน</span>
         <ul class="time-list" id="fixedTimeList"></ul>
         <div class="add-time-row">
-          <input type="time" id="newFixedTime" value="09:00" />
+          <div class="time-picker" id="newFixedTime"></div>
           <button id="addFixedTime" class="ghost-btn">+ เพิ่มเวลา</button>
         </div>
       </div>
@@ -139,7 +139,7 @@
         </label>
         <label class="field">
           <span>เวลาแจ้งเตือน</span>
-          <input type="time" id="meritReminderTime" value="21:00" />
+          <div class="time-picker" id="meritReminderTime"></div>
         </label>
       </div>
 

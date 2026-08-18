@@ -413,6 +413,45 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--text-main);
 }
 
+/* Custom 24-hour time picker - replaces <input type="time"> because its
+   native AM/PM display follows the OS/browser locale, not the page's lang. */
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.time-picker select {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 15px;
+  font-family: inherit;
+  appearance: none;
+  padding: 0;
+  min-width: 26px;
+  text-align: center;
+}
+.time-picker select:focus { outline: none; }
+.time-picker select option {
+  background: #241a3f;
+  color: var(--text-main);
+}
+.time-picker .time-colon {
+  color: var(--text-main);
+  font-size: 15px;
+}
+.time-picker .time-suffix {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-left: 4px;
+}
+
 .inline-input {
   display: flex;
   align-items: center;

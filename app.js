@@ -1528,8 +1528,72 @@
     installBtn.hidden = true;
   });
 
+  // Native <input type="time"> shows AM/PM based on the OS/browser locale,
+  // not the page's lang="th" - so Thai users still see "08:00 AM" regardless.
+  // These hour/minute selects guarantee a 24-hour "น." display for everyone,
+  // while still exposing a .value ("HH:MM") + "change" event so the rest of
+  // the app can treat it exactly like the native input it replaced.
+  function initTimePicker(container, initialValue) {
+    const hourSelect = document.createElement("select");
+    hourSelect.className = "time-hour";
+    hourSelect.setAttribute("aria-label", "ชั่วโมง");
+    for (let h = 0; h < 24; h++) {
+      const opt = document.createElement("option");
+      opt.value = String(h).padStart(2, "0");
+      opt.textContent = opt.value;
+      hourSelect.appendChild(opt);
+    }
+    const colon = document.createElement("span");
+    colon.className = "time-colon";
+    colon.textContent = ":";
+    const minuteSelect = document.createElement("select");
+    minuteSelect.className = "time-minute";
+    minuteSelect.setAttribute("aria-label", "นาที");
+    for (let m = 0; m < 60; m++) {
+      const opt = document.createElement("option");
+      opt.value = String(m).padStart(2, "0");
+      opt.textContent = opt.value;
+      minuteSelect.appendChild(opt);
+    }
+    const suffix = document.createElement("span");
+    suffix.className = "time-suffix";
+    suffix.textContent = "น.";
+
+    container.innerHTML = "";
+    container.appendChild(hourSelect);
+    container.appendChild(colon);
+    container.appendChild(minuteSelect);
+    container.appendChild(suffix);
+
+    function apply(value) {
+      const m = /^(\d{1,2}):(\d{1,2})$/.exec(value || "");
+      if (!m) return;
+      hourSelect.value = String(Math.min(23, Number(m[1]))).padStart(2, "0");
+      minuteSelect.value = String(Math.min(59, Number(m[2]))).padStart(2, "0");
+    }
+    apply(initialValue);
+
+    Object.defineProperty(container, "value", {
+      get() {
+        return `${hourSelect.value}:${minuteSelect.value}`;
+      },
+      set(v) {
+        apply(v);
+      },
+    });
+
+    const fireChange = () => container.dispatchEvent(new Event("change"));
+    hourSelect.addEventListener("change", fireChange);
+    minuteSelect.addEventListener("change", fireChange);
+  }
+
   // ---- init ----
   function init() {
+    initTimePicker(activeStartInput, settings.activeStart);
+    initTimePicker(activeEndInput, settings.activeEnd);
+    initTimePicker(newFixedTimeInput, "09:00");
+    initTimePicker(meritReminderTimeInput, settings.meritReminderTime);
+
     ringPathLength = ringProgress.getTotalLength();
     ringProgress.style.strokeDasharray = String(ringPathLength);
     setProgress(0);
