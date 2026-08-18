@@ -116,6 +116,44 @@
     </section>
 
     <section class="panel">
+      <div class="panel-header-row">
+        <h2>เสบียงบุญ</h2>
+        <span class="merit-total" id="meritTotal">0 คะแนน</span>
+      </div>
+      <p class="hint">ทุกครั้งที่กด "ฉันมีสติ" จะได้รับคะแนนเสบียงบุญ สะสมรวมกับบุญอื่นๆ ที่เพิ่มเองในวันนี้</p>
+
+      <ul class="log-list" id="meritList">
+        <li class="log-empty">วันนี้ยังไม่มีบุญสะสม</li>
+      </ul>
+
+      <div class="add-merit-row">
+        <input type="text" id="newMeritLabel" maxlength="60" placeholder="วันนี้ทำบุญอะไร เช่น ตักบาตร ให้อภัย ช่วยเหลือผู้อื่น..." />
+        <div class="field-row">
+          <div class="inline-input">
+            <input type="number" id="newMeritPoints" min="1" max="999" value="10" />
+            <span class="unit">คะแนน</span>
+          </div>
+          <button id="addMeritBtn" class="ghost-btn">+ เพิ่มบุญ</button>
+        </div>
+      </div>
+
+      <div class="field-row settings-divider">
+        <label class="field checkbox-field">
+          <input type="checkbox" id="meritReminderEnabled" checked />
+          <span>แจ้งเตือนอนุโมทนาบุญก่อนนอน</span>
+        </label>
+        <label class="field">
+          <span>เวลาแจ้งเตือน</span>
+          <input type="time" id="meritReminderTime" value="21:00" />
+        </label>
+      </div>
+      <div class="panel-header-row settings-divider">
+        <span class="hint">ล้างประวัติบุญทั้งหมด</span>
+        <button id="clearMerit" class="link-btn">ล้างประวัติบุญ</button>
+      </div>
+    </section>
+
+    <section class="panel">
       <h2>เสียงระฆัง</h2>
       <div class="sound-grid" id="soundGrid">
         <button class="sound-choice active" data-sound="tibetan">
@@ -172,44 +210,6 @@
         <input type="checkbox" id="ttsEnabled" checked />
         <span>อ่านข้อความเตือนสติออกเสียง ทุกครั้งที่ระฆังดัง</span>
       </label>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header-row">
-        <h2>เสบียงบุญ</h2>
-        <span class="merit-total" id="meritTotal">0 คะแนน</span>
-      </div>
-      <p class="hint">ทุกครั้งที่กด "ฉันมีสติ" จะได้รับคะแนนเสบียงบุญ สะสมรวมกับบุญอื่นๆ ที่เพิ่มเองในวันนี้</p>
-
-      <ul class="log-list" id="meritList">
-        <li class="log-empty">วันนี้ยังไม่มีบุญสะสม</li>
-      </ul>
-
-      <div class="add-merit-row">
-        <input type="text" id="newMeritLabel" maxlength="60" placeholder="วันนี้ทำบุญอะไร เช่น ตักบาตร ให้อภัย ช่วยเหลือผู้อื่น..." />
-        <div class="field-row">
-          <div class="inline-input">
-            <input type="number" id="newMeritPoints" min="1" max="999" value="10" />
-            <span class="unit">คะแนน</span>
-          </div>
-          <button id="addMeritBtn" class="ghost-btn">+ เพิ่มบุญ</button>
-        </div>
-      </div>
-
-      <div class="field-row settings-divider">
-        <label class="field checkbox-field">
-          <input type="checkbox" id="meritReminderEnabled" checked />
-          <span>แจ้งเตือนอนุโมทนาบุญก่อนนอน</span>
-        </label>
-        <label class="field">
-          <span>เวลาแจ้งเตือน</span>
-          <input type="time" id="meritReminderTime" value="21:00" />
-        </label>
-      </div>
-      <div class="panel-header-row settings-divider">
-        <span class="hint">ล้างประวัติบุญทั้งหมด</span>
-        <button id="clearMerit" class="link-btn">ล้างประวัติบุญ</button>
-      </div>
     </section>
 
     <section class="panel">
