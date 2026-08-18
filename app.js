@@ -349,6 +349,8 @@
       badge: "icons/icon-192.png",
       tag: "mindful-bell",
       silent: true,
+      requireInteraction: true,
+      renotify: true,
     };
     try {
       if (navigator.serviceWorker) {
