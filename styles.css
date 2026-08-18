@@ -493,8 +493,6 @@ button { font-family: inherit; cursor: pointer; }
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 280px;
-  overflow-y: auto;
 }
 
 .msg-list li {
