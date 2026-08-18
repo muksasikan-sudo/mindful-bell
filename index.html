@@ -53,8 +53,9 @@
     <section class="status-card">
       <div class="ring-dial" id="ringDial">
         <svg viewBox="0 0 120 120" class="ring-svg" aria-hidden="true">
-          <circle cx="60" cy="60" r="52" class="ring-track"></circle>
-          <circle cx="60" cy="60" r="52" class="ring-progress" id="ringProgress"></circle>
+          <path class="ring-clapper" d="M60 110 C65.5 110 70 105.5 70 100 H50 C50 105.5 54.5 110 60 110 Z"></path>
+          <path class="ring-track" d="M60 10 C54.5 10 50 14.5 50 20 C50 20.5 50 21 50 21.5 C35.5 25.5 25 39 25 55 V80 L15 90 V95 H105 V90 L95 80 V55 C95 39 84.5 25.5 70 21.5 C70 21 70 20.5 70 20 C70 14.5 65.5 10 60 10 Z"></path>
+          <path class="ring-progress" id="ringProgress" d="M60 10 C54.5 10 50 14.5 50 20 C50 20.5 50 21 50 21.5 C35.5 25.5 25 39 25 55 V80 L15 90 V95 H105 V90 L95 80 V55 C95 39 84.5 25.5 70 21.5 C70 21 70 20.5 70 20 C70 14.5 65.5 10 60 10 Z"></path>
         </svg>
         <div class="ring-center">
           <div class="ring-state" id="ringState">หยุดอยู่</div>

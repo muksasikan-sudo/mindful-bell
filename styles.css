@@ -191,21 +191,26 @@ main { display: flex; flex-direction: column; gap: 16px; }
 .ring-svg {
   width: 100%;
   height: 100%;
-  transform: rotate(-90deg);
+}
+
+.ring-clapper {
+  fill: rgba(255, 255, 255, 0.08);
+  stroke: none;
 }
 
 .ring-track {
   fill: none;
   stroke: rgba(255, 255, 255, 0.08);
-  stroke-width: 8;
+  stroke-width: 6;
+  stroke-linejoin: round;
 }
 
 .ring-progress {
   fill: none;
-  stroke: url(#none);
   stroke: var(--accent-strong);
-  stroke-width: 8;
+  stroke-width: 6;
   stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-dasharray: 326.7;
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 0.4s linear, stroke 0.3s ease;

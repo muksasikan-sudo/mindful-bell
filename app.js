@@ -6,7 +6,7 @@
   const BG_KEY = "mindfulBell.bg.v1";
   const MERIT_KEY = "mindfulBell.merit.v1";
   const MINDFUL_MERIT_POINTS = 5;
-  const CIRC = 2 * Math.PI * 52;
+  let ringPathLength = 0;
 
   // Free-licensed photos from Wikimedia Commons (temples, Buddha statues, lotus flowers).
   const BACKGROUNDS = [
@@ -616,7 +616,7 @@
   }
 
   function setProgress(p) {
-    const offset = CIRC - CIRC * Math.min(1, Math.max(0, p));
+    const offset = ringPathLength - ringPathLength * Math.min(1, Math.max(0, p));
     ringProgress.style.strokeDashoffset = offset;
   }
 
@@ -1387,7 +1387,8 @@
 
   // ---- init ----
   function init() {
-    ringProgress.style.strokeDasharray = String(CIRC);
+    ringPathLength = ringProgress.getTotalLength();
+    ringProgress.style.strokeDasharray = String(ringPathLength);
     setProgress(0);
 
     intervalMinutesInput.value = settings.intervalMinutes;
