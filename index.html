@@ -178,17 +178,27 @@
     <section class="panel">
       <div class="panel-header-row">
         <h2>ข้อความเตือนสติ</h2>
-        <button id="resetMsgsBtn" class="link-btn">คืนค่าเริ่มต้น</button>
+        <div class="panel-header-actions">
+          <button id="resetMsgsBtn" class="link-btn">คืนค่าเริ่มต้น</button>
+          <button id="toggleMsgsBtn" class="chevron-btn" aria-expanded="false" aria-label="แสดง/ซ่อนรายการข้อความ">
+            <svg viewBox="0 0 24 24" class="chevron-icon" aria-hidden="true">
+              <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
       </div>
-      <p class="hint">ระฆังจะสุ่มหยิบข้อความเหล่านี้ขึ้นมาสลับกันทุกครั้งที่ดัง</p>
       <label class="field checkbox-field checkin-toggle">
         <input type="checkbox" id="checkinEnabled" checked />
         <span>เช็คอินอารมณ์ก่อน-หลัง ทุกครั้งที่ระฆังดัง</span>
       </label>
-      <ul class="msg-list" id="msgList"></ul>
-      <div class="add-msg-row">
-        <textarea id="newMsgText" maxlength="200" rows="2" placeholder="พิมพ์ข้อความเตือนสติที่อยากเพิ่ม..."></textarea>
-        <button id="addMsgBtn" class="ghost-btn">+ เพิ่มข้อความ</button>
+
+      <div id="msgListWrap" hidden>
+        <p class="hint">ระฆังจะสุ่มหยิบข้อความเหล่านี้ขึ้นมาสลับกันทุกครั้งที่ดัง</p>
+        <ul class="msg-list" id="msgList"></ul>
+        <div class="add-msg-row">
+          <textarea id="newMsgText" maxlength="200" rows="2" placeholder="พิมพ์ข้อความเตือนสติที่อยากเพิ่ม..."></textarea>
+          <button id="addMsgBtn" class="ghost-btn">+ เพิ่มข้อความ</button>
+        </div>
       </div>
 
       <div class="field-row settings-divider">

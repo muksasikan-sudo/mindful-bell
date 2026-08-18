@@ -187,6 +187,30 @@ main { display: flex; flex-direction: column; gap: 16px; }
   gap: 12px;
 }
 
+.chevron-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.chevron-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.25s ease;
+}
+
+.chevron-btn[aria-expanded="true"] .chevron-icon {
+  transform: rotate(180deg);
+}
+
 /* Ring dial */
 .ring-dial {
   position: relative;
