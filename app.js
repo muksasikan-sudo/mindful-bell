@@ -103,6 +103,7 @@
     ttsVoiceURI: "",
     meritReminderEnabled: true,
     meritReminderTime: "21:00",
+    userDisplayName: "",
     runtime: { running: false, anchorTime: null },
   };
 
@@ -211,6 +212,9 @@
   const newMeritDetailInput = el("newMeritDetail");
   const meritReminderEnabledInput = el("meritReminderEnabled");
   const meritReminderTimeInput = el("meritReminderTime");
+  const userDisplayNameInput = el("userDisplayName");
+  const shareMeritBtn = el("shareMeritBtn");
+  const shareMeritHint = el("shareMeritHint");
   const clearMeritBtn = el("clearMerit");
   const meritOverlay = el("meritOverlay");
   const meritBody = el("meritBody");
@@ -829,6 +833,20 @@
     return `วันนี้คุณได้สร้างบุญไว้ดังนี้ ${parts.join(", ")} รวมทั้งหมด ${total} ครั้ง`;
   }
 
+  // Human-readable version for sharing outside the app (LINE, Facebook, etc.)
+  // No accounts/backend involved - this just formats text for the OS share
+  // sheet or clipboard, so others can see and reply "อนุโมทนา" wherever shared.
+  function buildShareSummaryText() {
+    const { groups, order } = getMeritGroupedToday();
+    const who = (settings.userDisplayName || "").trim() || "ฉัน";
+    if (!order.length) {
+      return `🙏 วันนี้ ${who} ยังไม่ได้บันทึกบุญไว้เลย`;
+    }
+    const total = order.reduce((sum, cat) => sum + groups[cat].count, 0);
+    const lines = MERIT_CATEGORIES.filter((c) => groups[c.key]).map((c) => `${c.emoji} ${c.key} ${groups[c.key].count} ครั้ง`);
+    return `🙏 บุญที่ ${who} ทำวันนี้\n${lines.join("\n")}\n\nรวมทั้งหมด ${total} ครั้ง\n\nขอเชิญร่วมอนุโมทนาบุญด้วยกัน สาธุ`;
+  }
+
   function getNextMeritTriggerTimestamp(fromMs) {
     const from = new Date(fromMs);
     const time = settings.meritReminderTime || "21:00";
@@ -951,6 +969,34 @@
     settings.meritReminderTime = meritReminderTimeInput.value || "21:00";
     saveSettings();
     scheduleMeritReminder();
+  });
+
+  userDisplayNameInput.addEventListener("change", () => {
+    settings.userDisplayName = userDisplayNameInput.value.trim();
+    saveSettings();
+  });
+
+  shareMeritBtn.addEventListener("click", async () => {
+    const text = buildShareSummaryText();
+    shareMeritHint.textContent = "";
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+      } catch (e) {
+        // user closed the share sheet without picking anything - not an error
+      }
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        shareMeritHint.textContent = "คัดลอกข้อความแล้ว วางไปที่แอปที่ต้องการแชร์ได้เลย";
+      } catch (e) {
+        shareMeritHint.textContent = "คัดลอกไม่สำเร็จ ลองอีกครั้ง";
+      }
+      return;
+    }
+    shareMeritHint.textContent = "เบราว์เซอร์นี้ไม่รองรับการแชร์อัตโนมัติ";
   });
 
   clearMeritBtn.addEventListener("click", () => {
@@ -1509,6 +1555,7 @@
 
     meritReminderEnabledInput.checked = settings.meritReminderEnabled;
     meritReminderTimeInput.value = settings.meritReminderTime;
+    userDisplayNameInput.value = settings.userDisplayName || "";
     renderMeritCatGrid();
     renderMeritPanel();
     scheduleMeritReminder();

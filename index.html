@@ -142,6 +142,19 @@
           <input type="time" id="meritReminderTime" value="21:00" />
         </label>
       </div>
+
+      <div class="field-row settings-divider">
+        <label class="field">
+          <span>ชื่อที่จะแสดงตอนแชร์ (ไม่บังคับ)</span>
+          <input type="text" id="userDisplayName" maxlength="40" placeholder="เช่น คุณสมชาย" />
+        </label>
+      </div>
+      <div class="panel-header-row">
+        <span class="hint">แชร์สรุปบุญวันนี้ให้คนอื่นร่วมอนุโมทนา</span>
+        <button id="shareMeritBtn" class="ghost-btn">📤 แชร์บุญวันนี้</button>
+      </div>
+      <p class="hint" id="shareMeritHint"></p>
+
       <div class="panel-header-row settings-divider">
         <span class="hint">ล้างประวัติบุญทั้งหมด</span>
         <button id="clearMerit" class="link-btn">ล้างประวัติบุญ</button>
