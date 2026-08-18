@@ -475,6 +475,80 @@
     }
   }
 
+  // Long messages (numbered lists, comma-separated anisong lists) read as one
+  // run-on utterance are hard to follow even at rate=1. This breaks them into
+  // shorter phrase-sized chunks - on their own numbered item, on commas for
+  // list sentences, and finally word-wrapped as a fallback for any clause
+  // that's still long with no punctuation to break on - without touching the
+  // wording itself.
+  function wrapWords(text, maxLen) {
+    const words = text.split(/\s+/).filter(Boolean);
+    const out = [];
+    let buf = "";
+    words.forEach((w) => {
+      const candidate = buf ? `${buf} ${w}` : w;
+      if (candidate.length > maxLen && buf) {
+        out.push(buf);
+        buf = w;
+      } else {
+        buf = candidate;
+      }
+    });
+    if (buf) out.push(buf);
+    return out;
+  }
+
+  function splitForSpeech(text) {
+    if (!text) return [];
+    const maxLen = 70;
+    const normalized = text.replace(/(\d{1,2})\.(?=\S)/g, "\n$1. ");
+    const lines = normalized.split("\n").map((s) => s.trim()).filter(Boolean);
+    const chunks = [];
+    lines.forEach((line) => {
+      if (line.length <= maxLen) {
+        chunks.push(line);
+        return;
+      }
+      const commaParts = line.split(/,\s*/);
+      let buf = "";
+      commaParts.forEach((part) => {
+        const candidate = buf ? `${buf}, ${part}` : part;
+        if (candidate.length > maxLen && buf) {
+          chunks.push(buf);
+          buf = part;
+        } else {
+          buf = candidate;
+        }
+      });
+      if (buf) chunks.push(buf);
+    });
+    const wrapped = [];
+    chunks.forEach((c) => {
+      if (c.length <= maxLen * 1.4) {
+        wrapped.push(c);
+      } else {
+        wrapWords(c, maxLen).forEach((w) => wrapped.push(w));
+      }
+    });
+    return wrapped.length ? wrapped : [text];
+  }
+
+  function speakChunks(chunks, onEnd, pitchOverride) {
+    if (!chunks.length) {
+      if (onEnd) onEnd();
+      return;
+    }
+    let i = 0;
+    function next() {
+      if (i >= chunks.length) {
+        if (onEnd) onEnd();
+        return;
+      }
+      speakMessage(chunks[i++], next, pitchOverride);
+    }
+    next();
+  }
+
   // ---- wake lock ----
   async function applyWakeLock() {
     if (!settings.wakeLock || !running) return releaseWakeLock();
@@ -871,7 +945,7 @@
     playSound("chime", settings.volume);
     setTimeout(() => {
       openMeritOverlay(summary);
-      speakMessage(summary);
+      speakChunks(splitForSpeech(summary));
     }, bellDecayMs("chime"));
     scheduleMeritReminder();
   }
@@ -1166,7 +1240,7 @@
         renderCheckin();
       });
       checkinBody.appendChild(btn);
-      speakMessage(SESSION_INTRO, () => speakMessage(checkinMessageText));
+      speakMessage(SESSION_INTRO, () => speakChunks(splitForSpeech(checkinMessageText)));
     } else if (checkinPhase === "after") {
       const q = document.createElement("p");
       q.className = "checkin-question";
