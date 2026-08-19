@@ -814,6 +814,16 @@ button { font-family: inherit; cursor: pointer; }
 .emotion-emoji { font-size: 24px; }
 .emotion-label { font-size: 12px; }
 
+.emotion-grid-desc {
+  grid-template-columns: repeat(2, 1fr);
+}
+.emotion-desc {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  text-align: center;
+}
+
 .intensity-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

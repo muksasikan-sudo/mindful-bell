@@ -156,12 +156,12 @@
   };
 
   const EMOTIONS = [
-    { key: "สุข", emoji: "🙂" },
-    { key: "ทุกข์", emoji: "😔" },
-    { key: "โกรธ", emoji: "😠" },
-    { key: "ฟุ้งซ่าน", emoji: "🌀" },
-    { key: "เสียใจ", emoji: "😢" },
-    { key: "เฉยๆ", emoji: "😐" },
+    { key: "สุข", emoji: "😊", desc: "เช่น ดีใจ สนุก พอใจ ภูมิใจ ตื่นเต้น โล่งใจ" },
+    { key: "เศร้า", emoji: "😢", desc: "เช่น เสียใจ เหงา ผิดหวัง หดหู่ คิดถึง" },
+    { key: "โกรธ", emoji: "😡", desc: "เช่น หงุดหงิด โมโห ไม่พอใจ" },
+    { key: "ฟุ้งซ่าน", emoji: "😨", desc: "เช่น กังวล หวาดระแวง ไม่มั่นคง ใจไม่สงบ เดี๋ยวคิดเรื่องนี้" },
+    { key: "ทุกข์", emoji: "😒", desc: "เช่น รู้สึกผิด เสียหน้า ไม่ชอบ อิจฉา หวง กลัวเสียคนหรือสิ่งที่รัก" },
+    { key: "สงบ", emoji: "😌", desc: "เช่น สบายใจ ผ่อนคลาย มั่นคง ปลอดโปร่ง" },
   ];
 
   const POSTURES = [
@@ -1192,6 +1192,7 @@
   function buildOptionGrid(list, onPick) {
     const grid = document.createElement("div");
     grid.className = "emotion-grid";
+    if (list.some((e) => e.desc)) grid.classList.add("emotion-grid-desc");
     list.forEach((e) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -1204,6 +1205,12 @@
       label.textContent = e.key;
       btn.appendChild(emoji);
       btn.appendChild(label);
+      if (e.desc) {
+        const desc = document.createElement("span");
+        desc.className = "emotion-desc";
+        desc.textContent = e.desc;
+        btn.appendChild(desc);
+      }
       btn.addEventListener("click", () => onPick(e.key));
       grid.appendChild(btn);
     });
