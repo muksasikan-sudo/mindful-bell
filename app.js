@@ -78,6 +78,28 @@
 
   const SESSION_INTRO = "ขอเรียนเชิญทุกท่านมาสร้างบุญ ฝึกทบทวนธรรมไปพร้อมๆกันครับ";
 
+  // The evening dedication vow - spoken in 3 parts with a real silent pause
+  // (not just chained utterances) at the two spots where the user is meant
+  // to say their own name/birthdate and their own dedication recipient aloud.
+  const MERIT_VOW_PART1 = "ข้าพเจ้า";
+  const MERIT_VOW_PART1_CUE = "(เอ่ยชื่อ วันเดือนปีเกิด ของตนเอง)";
+  const MERIT_VOW_PART2 = "ขอตั้งจิตอธิษฐาน ด้วยอำนาจแห่งบุญกุศลตั้งแต่อดีตจนถึงปัจจุบัน ไม่ว่าจะระลึกได้หรือระลึกไม่ได้ ขอผลแห่งกุศลเหล่านี้จงเป็นเหตุปัจจัยให้ข้าพเจ้ามีสติ มีปัญญา มีความเห็นถูก รู้เท่าทันกิเลส และดำเนินชีวิตโดยไม่ประมาท และข้าพเจ้าขออุทิศส่วนกุศลให้กับ";
+  const MERIT_VOW_PART2_CUE = "(เอ่ยชื่อผู้ที่จะอุทิศส่วนกุศลให้)";
+  const MERIT_VOW_PART3 = "และขออนุโมทนาบุญ ยินดีในบุญที่ผู้อื่นทำด้วย";
+  const MERIT_VOW_PAUSE_MS = 5000;
+
+  function speakMeritVow(onEnd) {
+    speakChunks(splitForSpeech(MERIT_VOW_PART1), () => {
+      setTimeout(() => {
+        speakChunks(splitForSpeech(MERIT_VOW_PART2), () => {
+          setTimeout(() => {
+            speakChunks(splitForSpeech(MERIT_VOW_PART3), onEnd);
+          }, MERIT_VOW_PAUSE_MS);
+        });
+      }, MERIT_VOW_PAUSE_MS);
+    });
+  }
+
   // Fixed reading tone - no longer user-adjustable. Slower-than-native rates
   // make most system TTS voices (e.g. Windows' bundled Thai voice) garble or
   // drop words rather than sound calm, so this stays at native pace.
@@ -1014,13 +1036,50 @@
       btn.className = "primary-btn checkin-primary";
       btn.textContent = "อธิษฐานบุญ";
       btn.addEventListener("click", () => {
-        meritPhase = "blessing";
+        meritPhase = "vow";
         renderMeritOverlay();
-        speakGroupBlessing("ขออนุโมทนาบุญกับทุกท่าน สาธุ สาธุ สาธุ");
+        speakMeritVow(() => {
+          meritPhase = "blessing";
+          renderMeritOverlay();
+          speakGroupBlessing("ขออนุโมทนาบุญกับทุกท่าน สาธุ สาธุ สาธุ");
+        });
       });
       meritBody.appendChild(eyebrow);
       meritBody.appendChild(msg);
       meritBody.appendChild(btn);
+    } else if (meritPhase === "vow") {
+      const eyebrow2 = document.createElement("p");
+      eyebrow2.className = "checkin-eyebrow";
+      eyebrow2.textContent = "🙏 กล่าวคำอธิษฐานบุญ";
+      const hint = document.createElement("p");
+      hint.className = "checkin-hint";
+      hint.textContent = "พูดตามไปพร้อมกัน แล้วเอ่ยชื่อของคุณเองในช่วงที่เว้นไว้";
+      const vowText = document.createElement("p");
+      vowText.className = "checkin-message merit-vow-text";
+      vowText.innerHTML = "";
+      [
+        MERIT_VOW_PART1,
+        ` <em>${MERIT_VOW_PART1_CUE}</em> `,
+        MERIT_VOW_PART2,
+        ` <em>${MERIT_VOW_PART2_CUE}</em> `,
+        MERIT_VOW_PART3,
+      ].forEach((seg) => {
+        vowText.insertAdjacentHTML("beforeend", seg);
+      });
+      const skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "link-btn checkin-skip";
+      skip.textContent = "ข้ามคำอธิษฐาน";
+      skip.addEventListener("click", () => {
+        speechSynthesis.cancel();
+        meritPhase = "blessing";
+        renderMeritOverlay();
+        speakGroupBlessing("ขออนุโมทนาบุญกับทุกท่าน สาธุ สาธุ สาธุ");
+      });
+      meritBody.appendChild(eyebrow2);
+      meritBody.appendChild(hint);
+      meritBody.appendChild(vowText);
+      meritBody.appendChild(skip);
     } else if (meritPhase === "blessing") {
       const done = document.createElement("p");
       done.className = "checkin-done";

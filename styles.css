@@ -754,6 +754,17 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--text-main);
 }
 
+.merit-vow-text em {
+  font-style: normal;
+  color: var(--accent-strong);
+  font-size: 13px;
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px dashed var(--accent-strong);
+  border-radius: 8px;
+  margin: 2px 0;
+}
+
 .checkin-done {
   margin: 8px 0 24px;
   font-size: 16px;
