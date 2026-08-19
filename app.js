@@ -109,9 +109,6 @@
   const defaults = {
     mode: "interval",
     intervalMinutes: 30,
-    useActiveWindow: true,
-    activeStart: "08:00",
-    activeEnd: "21:00",
     fixedTimes: ["09:00", "12:00", "15:00", "18:00"],
     sound: "tibetan",
     volume: 0.8,
@@ -227,10 +224,6 @@
   const intervalModePanel = el("intervalMode");
   const fixedModePanel = el("fixedMode");
   const intervalMinutesInput = el("intervalMinutes");
-  const useActiveWindowInput = el("useActiveWindow");
-  const activeWindowRow = el("activeWindowRow");
-  const activeStartInput = el("activeStart");
-  const activeEndInput = el("activeEnd");
   const fixedTimeList = el("fixedTimeList");
   const newFixedTimeInput = el("newFixedTime");
   const addFixedTimeBtn = el("addFixedTime");
@@ -653,21 +646,6 @@
     }
 
     const intervalMs = Math.max(1, settings.intervalMinutes) * 60000;
-
-    if (settings.useActiveWindow) {
-      const startT = dateAt(from, settings.activeStart);
-      const endT = dateAt(from, settings.activeEnd);
-      if (endT.getTime() > startT.getTime()) {
-        let t = startT.getTime();
-        while (t <= endT.getTime()) {
-          if (t > fromMs) return t;
-          t += intervalMs;
-        }
-      }
-      const tomorrow = new Date(from);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      return dateAt(tomorrow, settings.activeStart).getTime();
-    }
 
     const anchor = runtimeAnchor || fromMs;
     if (anchor > fromMs) return anchor;
@@ -1560,25 +1538,6 @@
     if (running) scheduleNext();
   });
 
-  useActiveWindowInput.addEventListener("change", () => {
-    settings.useActiveWindow = useActiveWindowInput.checked;
-    activeWindowRow.style.display = settings.useActiveWindow ? "" : "none";
-    saveSettings();
-    if (running) scheduleNext();
-  });
-
-  activeStartInput.addEventListener("change", () => {
-    settings.activeStart = activeStartInput.value || "08:00";
-    saveSettings();
-    if (running) scheduleNext();
-  });
-
-  activeEndInput.addEventListener("change", () => {
-    settings.activeEnd = activeEndInput.value || "21:00";
-    saveSettings();
-    if (running) scheduleNext();
-  });
-
   addFixedTimeBtn.addEventListener("click", () => {
     const v = newFixedTimeInput.value;
     if (!v) return;
@@ -1804,8 +1763,6 @@
 
   // ---- init ----
   function init() {
-    initTimePicker(activeStartInput, settings.activeStart);
-    initTimePicker(activeEndInput, settings.activeEnd);
     initTimePicker(newFixedTimeInput, "09:00");
     initTimePicker(meritReminderTimeInput, settings.meritReminderTime);
 
@@ -1814,10 +1771,6 @@
     setProgress(0);
 
     intervalMinutesInput.value = settings.intervalMinutes;
-    useActiveWindowInput.checked = settings.useActiveWindow;
-    activeWindowRow.style.display = settings.useActiveWindow ? "" : "none";
-    activeStartInput.value = settings.activeStart;
-    activeEndInput.value = settings.activeEnd;
     volumeInput.value = Math.round(settings.volume * 100);
     notifyEnabledInput.checked = settings.notifyEnabled;
     wakeLockInput.checked = settings.wakeLock;
