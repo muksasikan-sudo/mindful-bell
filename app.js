@@ -22,6 +22,32 @@
     { key: "ทิฏฐุชุกัมม์", desc: "ปรับความเห็นให้ถูกต้อง", emoji: "🧭" },
   ];
 
+  // Keyword hints so typing a free-text detail can suggest which of the 10
+  // categories it likely belongs to - people often don't know the Pali names
+  // by heart. This is a simple substring match, not real classification, so
+  // it only highlights a suggestion; the user still taps to confirm.
+  const MERIT_KEYWORDS = {
+    "ทานมัย": ["ให้", "บริจาค", "แจก", "ทาน", "แบ่งปัน", "อาหาร", "เสื้อผ้า", "เงิน", "ทำทาน", "ใส่บาตร", "แมว", "หมา", "สัตว์จร", "ปล่อยปลา", "ปล่อยนก", "ปล่อยสัตว์"],
+    "ศีลมัย": ["ศีล", "งดเว้น", "ไม่โกหก", "ไม่ลักขโมย", "ถือศีล", "งดเหล้า", "งดบุหรี่", "กินเจ", "เว้นชั่ว", "ไม่ผิดศีล"],
+    "ภาวนามัย": ["สวดมนต์", "นั่งสมาธิ", "ภาวนา", "เจริญสติ", "ทำสมาธิ", "วิปัสสนา", "กรรมฐาน", "เดินจงกรม"],
+    "อปจายนมัย": ["ไหว้", "เคารพ", "อ่อนน้อม", "กราบ", "ให้เกียรติ", "ลุกให้ที่นั่ง", "เคารพผู้ใหญ่"],
+    "เวยยาวัจจมัย": ["ช่วยเหลือ", "อาสา", "ขนของ", "ล้างจาน", "ทำความสะอาด", "ช่วยงาน", "จิตอาสา", "ช่วยยก"],
+    "ปัตติทานมัย": ["อุทิศ", "กรวดน้ำ", "ให้ส่วนบุญ", "แผ่เมตตา", "อุทิศส่วนกุศล"],
+    "ปัตตานุโมทนามัย": ["อนุโมทนา", "สาธุ", "ยินดีกับ", "ดีใจกับ"],
+    "ธัมมัสสวนมัย": ["ฟังธรรม", "ฟังเทศน์", "ฟังคลิปธรรมะ", "ฟังพระ"],
+    "ธัมมเทสนามัย": ["สอนธรรม", "แสดงธรรม", "บอกบุญ", "เผยแพร่ธรรมะ", "สอนคนอื่น"],
+    "ทิฏฐุชุกัมม์": ["ปรับความเห็น", "แก้ความเข้าใจผิด", "ทำความเข้าใจถูกต้อง"],
+  };
+
+  function suggestMeritCategory(text) {
+    const t = (text || "").trim();
+    if (!t) return null;
+    for (const cat of Object.keys(MERIT_KEYWORDS)) {
+      if (MERIT_KEYWORDS[cat].some((kw) => t.includes(kw))) return cat;
+    }
+    return null;
+  }
+
   // Free-licensed photos from Wikimedia Commons (temples, Buddha statues, lotus flowers).
   const BACKGROUNDS = [
     { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wat_Arun_Temple_Of_Dawn_%28121412175%29.jpeg/1920px-Wat_Arun_Temple_Of_Dawn_%28121412175%29.jpeg", caption: "วัดอรุณ ยามเย็น", credit: "Wikimedia Commons · CC BY 3.0" },
@@ -210,6 +236,7 @@
   const meritListEl = el("meritList");
   const meritCatGrid = el("meritCatGrid");
   const newMeritDetailInput = el("newMeritDetail");
+  const meritCatSuggestHint = el("meritCatSuggestHint");
   const meritReminderEnabledInput = el("meritReminderEnabled");
   const meritReminderTimeInput = el("meritReminderTime");
   const userDisplayNameInput = el("userDisplayName");
@@ -1014,6 +1041,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "merit-cat-choice";
+      btn.dataset.cat = c.key;
       const nameEl = document.createElement("span");
       nameEl.className = "merit-cat-name";
       const emoji = document.createElement("span");
@@ -1030,10 +1058,28 @@
         const detail = newMeritDetailInput.value.trim();
         addMeritEntry(c.key, detail, "manual");
         newMeritDetailInput.value = "";
+        updateMeritCatSuggestion();
       });
       meritCatGrid.appendChild(btn);
     });
   }
+
+  function updateMeritCatSuggestion() {
+    const suggested = suggestMeritCategory(newMeritDetailInput.value);
+    document.querySelectorAll(".merit-cat-choice").forEach((btn) => {
+      btn.classList.toggle("suggested", !!suggested && btn.dataset.cat === suggested);
+    });
+    if (suggested) {
+      const cat = MERIT_CATEGORIES.find((c) => c.key === suggested);
+      meritCatSuggestHint.textContent = `แนะนำ: ${cat.emoji} ${cat.key} — แตะปุ่มที่ไฮไลต์ด้านบนเพื่อบันทึก`;
+      meritCatSuggestHint.className = "hint ok";
+    } else {
+      meritCatSuggestHint.textContent = "";
+      meritCatSuggestHint.className = "hint";
+    }
+  }
+
+  newMeritDetailInput.addEventListener("input", updateMeritCatSuggestion);
 
   meritReminderEnabledInput.addEventListener("change", () => {
     settings.meritReminderEnabled = meritReminderEnabledInput.checked;
