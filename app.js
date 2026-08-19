@@ -927,14 +927,32 @@
     });
   }
 
+  // Groups by what was actually done (the detail text, e.g. "ฝึกมีสติ") rather
+  // than the Pali category name, so the spoken summary reads like "ฝึกมีสติ 7
+  // ครั้ง" instead of "ภาวนามัย 7 ครั้ง" - falls back to the category name only
+  // when an entry has no detail text to go on.
+  function getMeritActivityGroupedToday() {
+    const groups = {};
+    const order = [];
+    [...getTodayMeritEntries()].reverse().forEach((e) => {
+      const label = e.detail || e.category || "ทานมัย";
+      if (!groups[label]) {
+        groups[label] = 0;
+        order.push(label);
+      }
+      groups[label] += 1;
+    });
+    return { groups, order };
+  }
+
   function buildMeritSummaryText() {
-    const { groups, order } = getMeritGroupedToday();
+    const { groups, order } = getMeritActivityGroupedToday();
     if (!order.length) {
       return "วันนี้ยังไม่มีบุญที่บันทึกไว้เลย ลองทบทวนดูว่าวันนี้ได้ทำความดีอะไรบ้าง";
     }
-    const total = order.reduce((sum, cat) => sum + groups[cat].count, 0);
-    const parts = MERIT_CATEGORIES.filter((c) => groups[c.key]).map((c) => `${c.key} ${groups[c.key].count} ครั้ง`);
-    return `วันนี้คุณได้สร้างบุญไว้ดังนี้ ${parts.join(", ")} รวมทั้งหมด ${total} ครั้ง`;
+    const total = order.reduce((sum, label) => sum + groups[label], 0);
+    const parts = order.map((label) => `${label} ${groups[label]} ครั้ง`);
+    return `วันนี้คุณได้สร้างบุญดังนี้ ${parts.join(" ")} รวมทั้งหมด ${total} ครั้ง`;
   }
 
   // Human-readable version for sharing outside the app (LINE, Facebook, etc.)
