@@ -269,6 +269,7 @@
   const meritBody = el("meritBody");
   const meritCloseBtn = el("meritCloseBtn");
   const installBtn = el("installBtn");
+  const shareAppBtn = el("shareAppBtn");
   const bgCreditEl = el("bgCredit");
   const bgLayers = [el("bgLayerA"), el("bgLayerB")];
   let activeBgLayerIndex = 0;
@@ -1695,6 +1696,34 @@
         openCheckin(msg, { isTest: true, logEntry: null });
       }
     }, bellDecayMs("chime"));
+  });
+
+  shareAppBtn.addEventListener("click", async () => {
+    const shareData = {
+      title: "ระฆังเตือนสติ",
+      text: "แอปเสียงระฆังเตือนสติ ช่วยแจ้งเตือนให้กลับมามีสติเป็นระยะๆ ลองใช้ดูนะ",
+      url: location.href,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (e) {
+        // user closed the share sheet without picking anything - not an error
+      }
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        const original = shareAppBtn.textContent;
+        shareAppBtn.textContent = "คัดลอกลิงก์แล้ว!";
+        setTimeout(() => {
+          shareAppBtn.textContent = original;
+        }, 2000);
+      } catch (e) {
+        /* ignore */
+      }
+    }
   });
 
   // install prompt

@@ -134,6 +134,12 @@ body {
   gap: 10px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .bell-glyph {
   font-size: 26px;
   filter: drop-shadow(0 0 10px rgba(179, 153, 255, 0.6));
