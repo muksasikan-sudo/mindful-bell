@@ -996,17 +996,6 @@
     scheduleMeritReminder();
   }
 
-  // The Web Speech API has a single sequential queue - there is no way to make
-  // two utterances truly overlap into a "many voices at once" sound. This
-  // speaks the line twice back-to-back with a shifted pitch on the second
-  // pass as the closest practical approximation of a group response.
-  function speakGroupBlessing(text) {
-    if (!settings.ttsEnabled || !ttsSupported) return;
-    speakMessage(text, () => {
-      speakMessage(text, null, Math.max(0, Math.min(2, TTS_PITCH - 0.2)));
-    });
-  }
-
   function openMeritOverlay(summaryText) {
     meritPhase = "summary";
     meritSummaryText = summaryText;
@@ -1035,11 +1024,7 @@
       btn.addEventListener("click", () => {
         meritPhase = "vow";
         renderMeritOverlay();
-        speakMeritVow(() => {
-          meritPhase = "blessing";
-          renderMeritOverlay();
-          speakGroupBlessing("ขออนุโมทนาบุญกับทุกท่าน สาธุ สาธุ สาธุ");
-        });
+        speakMeritVow(closeMeritOverlay);
       });
       meritBody.appendChild(eyebrow);
       meritBody.appendChild(msg);
@@ -1069,25 +1054,12 @@
       skip.textContent = "ข้ามคำอธิษฐาน";
       skip.addEventListener("click", () => {
         speechSynthesis.cancel();
-        meritPhase = "blessing";
-        renderMeritOverlay();
-        speakGroupBlessing("ขออนุโมทนาบุญกับทุกท่าน สาธุ สาธุ สาธุ");
+        closeMeritOverlay();
       });
       meritBody.appendChild(eyebrow2);
       meritBody.appendChild(hint);
       meritBody.appendChild(vowText);
       meritBody.appendChild(skip);
-    } else if (meritPhase === "blessing") {
-      const done = document.createElement("p");
-      done.className = "checkin-done";
-      done.textContent = "ขออนุโมทนาบุญกับทุกท่าน 🙏\nสาธุ สาธุ สาธุ";
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "primary-btn checkin-primary";
-      btn.textContent = "ปิด";
-      btn.addEventListener("click", closeMeritOverlay);
-      meritBody.appendChild(done);
-      meritBody.appendChild(btn);
     }
   }
 
